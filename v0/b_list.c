@@ -40,3 +40,10 @@ void *List_copy(void *list) {
   }
   return cpy;
 }
+
+ObjTrait *List_ObjTrait() {
+  ObjTrait *objtrait = (ObjTrait *)b_alloc(sizeof(ObjTrait));
+  objtrait->copier = &List_copy;
+  objtrait->destructor = &List_free;
+  return objtrait;
+}

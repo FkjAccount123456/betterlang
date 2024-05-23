@@ -1,6 +1,6 @@
 #include "b_string.h"
 #include "b_alloc.h"
-#include <string.h>
+#include "b_includes.h"
 
 char *str_copy(char *base) {
   char *str = (char *)b_alloc(sizeof(char) * (strlen(base)));

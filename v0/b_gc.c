@@ -10,8 +10,10 @@ GC_Object *GC_Object_init(void *ptr, ObjTrait *type) {
 
 void GC_Object_decrc(GC_Object *obj) {
   obj->rc--;
-  if (obj->rc <= 0)
+  if (obj->rc <= 0) {
     (*obj->type->destructor)(obj->ptr);
+    b_free(obj);
+  }
 }
 
 GC_Object *GC_Object_copy(GC_Object *obj) {
@@ -41,6 +43,7 @@ Object Object_gc(GC_Object *gcObj) {
 }
 
 void Object_free(Object *obj) {
+  puts("Object_free");
   if (obj->type == OBJ_GC)
-    b_free(obj->gcObj);
+    GC_Object_decrc(obj->gcObj);
 }

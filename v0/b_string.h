@@ -1,7 +1,7 @@
 #ifndef B_STRING_H
 #define B_STRING_H
 
-#include <stddef.h>
+#include "b_includes.h"
 #include "b_object.h"
 
 typedef struct String {
