@@ -4,6 +4,8 @@
 #include "b_includes.h"
 #include "b_object.h"
 
+#define GC_Object_getString(str) ((String *)(str).gcObj->ptr)
+
 typedef struct String {
   size_t size, max;
   char *val;

@@ -1,4 +1,4 @@
-OBJS = b_gc.o b_list.o b_string.o
+OBJS = b_gc.o b_list.o b_string.o b_dict.o
 
 run: compile
 	program

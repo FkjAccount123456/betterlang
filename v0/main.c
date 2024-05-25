@@ -12,6 +12,7 @@ void test_string() {
   Object obj = Object_gc(GC_Object_init(str, str_trait));
   printf("%s\n", ((String *)obj.gcObj->ptr)->val);
   Object_free(&obj);
+  b_free(str_trait);
 }
 
 void test_list() {
@@ -25,10 +26,26 @@ void test_list() {
     puts("");
   }
   Object_free(&obj);
+  b_free(list_trait);
+}
+
+void test_gc() {
+  ObjTrait *str_trait = String_ObjTrait();
+  Object str1 = Object_gc(GC_Object_init(String_new("Hello, "), str_trait));
+  Object str2 = Object_gc(GC_Object_init(String_new("world!"), str_trait));
+  Object str3 = Object_gc(GC_Object_pass(str1.gcObj));
+  printf("%s\n", GC_Object_getString(str1)->val);
+  printf("%s\n", GC_Object_getString(str2)->val);
+  printf("%s\n", GC_Object_getString(str3)->val);
+  Object_free(&str1);
+  Object_free(&str2);
+  Object_free(&str3);
+  b_free(str_trait);
 }
 
 int main() {
   // test_string();
-  test_list();
+  // test_list();
+  // test_gc();
   return 0;
 }

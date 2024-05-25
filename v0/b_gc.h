@@ -32,5 +32,6 @@ typedef struct Object {
 Object Object_int(long long intObj);
 Object Object_gc(GC_Object *gcObj);
 void Object_free(Object *obj);
+Object Object_copy(Object *obj);
 
 #endif // B_GC_H
