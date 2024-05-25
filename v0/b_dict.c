@@ -20,15 +20,18 @@ Object *Dict_find(Dict *dict, char *key) {
 }
 
 Object *Dict_insert(Dict *dict, char *key, Object obj) {
+  // printf("Dict_insert %s %d\n", key, *key);
   if (*key == 0) {
     if (dict->obj)
       Object_free(dict->obj);
+    else
+      dict->obj = (Object *)b_alloc(sizeof(Object));
     *dict->obj = obj;
     return dict->obj;
   }
   if (!dict->children[*key])
     dict->children[*key] = Dict_new();
-  return Dict_insert(dict->children[*key], key, obj);
+  return Dict_insert(dict->children[*key], key + 1, obj);
 }
 
 void *Dict_copy(void *base) {

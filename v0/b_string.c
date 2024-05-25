@@ -35,7 +35,7 @@ void String_cat(String *str, String *other) {
 }
 
 void String_free(void *str) {
-  puts("String_free");
+  // puts("String_free");
   b_free(((String *)str)->val);
   b_free(str);
 }

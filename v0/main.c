@@ -1,7 +1,8 @@
-#include "b_object.h"
+#include "b_dict.h"
 #include "b_gc.h"
-#include "b_string.h"
 #include "b_list.h"
+#include "b_object.h"
+#include "b_string.h"
 #include <stdio.h>
 
 void test_string() {
@@ -43,9 +44,24 @@ void test_gc() {
   b_free(str_trait);
 }
 
+void test_dict() {
+  Dict *dict = Dict_new();
+  // puts("Hello!");
+  Dict_insert(dict, "abc", Object_int(10));
+  Dict_insert(dict, "abd", Object_int(20));
+  Dict_insert(dict, "abe", Object_int(30));
+  printf("%d %d %d\n", Dict_find(dict, "abc")->intObj, Dict_find(dict, "abd")->intObj,
+         Dict_find(dict, "abe")->intObj);
+  Dict_find(dict, "abc")->intObj = 20;
+  printf("%d %d %d\n", Dict_find(dict, "abc")->intObj, Dict_find(dict, "abd")->intObj,
+         Dict_find(dict, "abe")->intObj);
+  Dict_free(dict);
+}
+
 int main() {
   // test_string();
   // test_list();
   // test_gc();
+  test_dict();
   return 0;
 }

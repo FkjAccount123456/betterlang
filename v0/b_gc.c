@@ -1,7 +1,7 @@
 #include "b_gc.h"
 
 GC_Object *GC_Object_init(void *ptr, ObjTrait *type) {
-  puts("GC_Object_init");
+  // puts("GC_Object_init");
   GC_Object *obj = (GC_Object *)b_alloc(sizeof(GC_Object));
   obj->ptr = ptr;
   obj->rc = 1;
@@ -10,7 +10,7 @@ GC_Object *GC_Object_init(void *ptr, ObjTrait *type) {
 }
 
 void GC_Object_decrc(GC_Object *obj) {
-  puts("GC_Object_decrc");
+  // puts("GC_Object_decrc");
   obj->rc--;
   if (obj->rc <= 0) {
     (*obj->type->destructor)(obj->ptr);
@@ -45,7 +45,7 @@ Object Object_gc(GC_Object *gcObj) {
 }
 
 void Object_free(Object *obj) {
-  puts("Object_free");
+  // puts("Object_free");
   if (obj->type == OBJ_GC)
     GC_Object_decrc(obj->gcObj);
 }
