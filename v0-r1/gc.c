@@ -2,7 +2,7 @@
 #include "b_string.h"
 #include "b_list.h"
 
-ObjTrait intTrait, strTrait, listTrait;
+ObjTrait intTrait, strTrait, listTrait, dictTrait;
 
 void ObjTrait_init() {
   intTrait.need_gc = false;

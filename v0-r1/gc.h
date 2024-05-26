@@ -11,6 +11,7 @@ typedef enum ObjType {
   INT_OBJ,
   STR_OBJ,
   LIST_OBJ,
+  DICT_OBJ,
 } ObjType;
 
 typedef struct ObjTrait {
