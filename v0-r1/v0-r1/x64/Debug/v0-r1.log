@@ -1,0 +1,1 @@
+﻿  clang gc.o b_list.o b_string.o v0-r1.c -o program
