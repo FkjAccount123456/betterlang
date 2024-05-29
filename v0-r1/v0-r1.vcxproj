@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -45,10 +44,8 @@
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
-  <ImportGroup Label="Shared">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -90,10 +87,10 @@
     <NMakeReBuildCommandLine>make build</NMakeReBuildCommandLine>
     <NMakePreprocessorDefinitions>NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
-  <ItemDefinitionGroup>
-  </ItemDefinitionGroup>
+  <ItemDefinitionGroup />
   <ItemGroup>
     <ClCompile Include="b_dict.c" />
+    <ClCompile Include="b_lexer.c" />
     <ClCompile Include="b_list.c" />
     <ClCompile Include="b_string.c" />
     <ClCompile Include="gc.c" />
@@ -101,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="b_dict.h" />
+    <ClInclude Include="b_lexer.h" />
     <ClInclude Include="b_list.h" />
     <ClInclude Include="b_string.h" />
     <ClInclude Include="gc.h" />
@@ -108,8 +106,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
+    <ClInclude Include="ast.h" />
+    <ClCompile Include="ast.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

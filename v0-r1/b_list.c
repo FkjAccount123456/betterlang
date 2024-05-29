@@ -50,7 +50,7 @@ void* List_pass(void* base) {
   return base;
 }
 
-void List_append(List *list, Object obj) {
+void List_append(List* list, Object obj) {
   if (list->max == list->size) {
     list->max *= 2;
     Object* p = (Object*)realloc(list->val, sizeof(Object) * list->max);

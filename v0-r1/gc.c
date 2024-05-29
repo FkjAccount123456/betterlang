@@ -1,6 +1,7 @@
 #include "gc.h"
 #include "b_string.h"
 #include "b_list.h"
+#include "b_dict.h"
 
 ObjTrait intTrait, strTrait, listTrait, dictTrait;
 
@@ -19,6 +20,12 @@ void ObjTrait_init() {
   listTrait.copier = List_copy;
   listTrait.destructor = List_free;
   listTrait.passer = List_pass;
+
+  dictTrait.need_gc = true;
+  dictTrait.tp = DICT_OBJ;
+  dictTrait.copier = Dict_copy;
+  dictTrait.destructor = Dict_free;
+  dictTrait.passer = Dict_pass;
 }
 
 GC_Object* GC_Object_init(void* obj) {

@@ -1,7 +1,16 @@
-#include <stdio.h>
+#include "includes.h"
+#include "gc.h"
+#include "b_lexer.h"
 
-int main(int argc, char **argv) {
-	printf("Hello, world!\n");
-	getchar();
-	return 0;
+void init() {
+  ObjTrait_init();
+  init_op_prio();
+}
+
+void quit() {
+}
+
+int main(int argc, char** argv) {
+  init();
+  return 0;
 }

@@ -30,6 +30,9 @@
     <ClCompile Include="b_dict.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="b_lexer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="b_list.h">
@@ -45,6 +48,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="b_dict.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="b_lexer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
