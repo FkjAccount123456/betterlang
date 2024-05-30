@@ -1,14 +1,14 @@
 #ifndef B_LEXER_H
 #define B_LEXER_H
 
-#include "includes.h"
 #include "b_string.h"
+#include "includes.h"
 
 typedef enum TokenType {
   INT_TOKEN,
   ID_TOKEN,
   STR_TOKEN,
-  
+
   IF_TOKEN,
   ELSE_TOKEN,
   WHILE_TOKEN,
@@ -54,25 +54,25 @@ typedef struct Token {
   TokenType tp;
   union {
     long long intToken;
-    String* strToken;
+    String *strToken;
   };
 } Token;
 
-Token* Token_new(TokenType tp);
+Token *Token_new(TokenType tp);
 
-Token* Token_int(long long intToken);
-Token* Token_str(TokenType tp, String* strToken);
+Token *Token_int(long long intToken);
+Token *Token_str(TokenType tp, String *strToken);
 
 typedef struct Lexer {
-  char* code;
-  char* cur;
-  Token* token;
+  char *code;
+  char *cur;
+  Token *token;
 } Lexer;
 
-Lexer* Lexer_new(char* code);
-void Lexer_free(Lexer* lexer);
-void Lexer_next(Lexer* l);
-char Lexer_escape(Lexer* l);
-void Lexer_skip(Lexer* l);
+Lexer *Lexer_new(char *code);
+void Lexer_free(Lexer *lexer);
+void Lexer_next(Lexer *l);
+char Lexer_escape(Lexer *l);
+void Lexer_skip(Lexer *l);
 
 #endif // B_LEXER_H

@@ -1,8 +1,8 @@
 #ifndef AST_H
 #define AST_H
 
-#include "b_string.h"
 #include "b_lexer.h"
+#include "b_string.h"
 
 typedef enum ExprType {
   INT_AST,
@@ -43,5 +43,8 @@ typedef struct Expr {
     } index_ast;
   };
 } Expr;
+
+Expr *Expr_new(ExprType type);
+void Expr_free(Expr *expr);
 
 #endif // AST_H

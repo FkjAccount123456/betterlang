@@ -1,14 +1,14 @@
 #include "b_list.h"
 
-List* List_new() {
-  List* list = (List*)malloc(sizeof(List));
+List *List_new() {
+  List *list = (List *)malloc(sizeof(List));
   if (list == NULL) {
     printf("Failed to malloc.");
     exit(-1);
   }
   list->max = 8;
   list->size = 0;
-  list->val = (Object*)calloc(list->max, sizeof(Object));
+  list->val = (Object *)calloc(list->max, sizeof(Object));
   if (list->val == NULL) {
     printf("Failed to malloc.");
     exit(-1);
@@ -16,15 +16,15 @@ List* List_new() {
   return list;
 }
 
-void* List_copy(void* base) {
-  List* list = (List*)malloc(sizeof(List));
+void *List_copy(void *base) {
+  List *list = (List *)malloc(sizeof(List));
   if (list == NULL) {
     printf("Failed to malloc.");
     exit(-1);
   }
-  list->max = ((List*)base)->max;
-  list->size = ((List*)base)->size;
-  list->val = (Object*)calloc(list->max, sizeof(Object));
+  list->max = ((List *)base)->max;
+  list->size = ((List *)base)->size;
+  list->val = (Object *)calloc(list->max, sizeof(Object));
   if (list->val == NULL) {
     printf("Failed to malloc.");
     exit(-1);
@@ -35,25 +35,25 @@ void* List_copy(void* base) {
   return list;
 }
 
-void List_free(void* list) {
-  for (size_t i = 0; i < ((List*)list)->size; i++) {
-    Object_free(&((List*)list)->val[i]);
+void List_free(void *list) {
+  for (size_t i = 0; i < ((List *)list)->size; i++) {
+    Object_free(&((List *)list)->val[i]);
   }
-  free(((List*)list)->val);
+  free(((List *)list)->val);
   free(list);
 }
 
-void* List_pass(void* base) {
-  for (size_t i = 0; i < ((List*)base)->size; i++) {
-    ((List*)base)->val[i] = Object_pass(&((List*)base)->val[i]);
+void *List_pass(void *base) {
+  for (size_t i = 0; i < ((List *)base)->size; i++) {
+    ((List *)base)->val[i] = Object_pass(&((List *)base)->val[i]);
   }
   return base;
 }
 
-void List_append(List* list, Object obj) {
+void List_append(List *list, Object obj) {
   if (list->max == list->size) {
     list->max *= 2;
-    Object* p = (Object*)realloc(list->val, sizeof(Object) * list->max);
+    Object *p = (Object *)realloc(list->val, sizeof(Object) * list->max);
     if (p == NULL) {
       printf("Failed to realloc.");
       exit(-1);

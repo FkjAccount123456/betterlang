@@ -1,7 +1,7 @@
 #include "gc.h"
-#include "b_string.h"
-#include "b_list.h"
 #include "b_dict.h"
+#include "b_list.h"
+#include "b_string.h"
 
 ObjTrait intTrait, strTrait, listTrait, dictTrait;
 
@@ -28,8 +28,8 @@ void ObjTrait_init() {
   dictTrait.passer = Dict_pass;
 }
 
-GC_Object* GC_Object_init(void* obj) {
-  GC_Object* gc = (GC_Object*)malloc(sizeof(GC_Object));
+GC_Object *GC_Object_init(void *obj) {
+  GC_Object *gc = (GC_Object *)malloc(sizeof(GC_Object));
   if (gc == NULL) {
     printf("Failed to malloc.");
     exit(-1);
@@ -46,14 +46,14 @@ Object Object_int(long long intObj) {
   return obj;
 }
 
-Object Object_gc(ObjTrait* trait, GC_Object* gcObj) {
+Object Object_gc(ObjTrait *trait, GC_Object *gcObj) {
   Object obj;
   obj.tp = trait;
   obj.gcObj = gcObj;
   return obj;
 }
 
-void Object_free(Object* obj) {
+void Object_free(Object *obj) {
   if (obj->tp->need_gc && obj->gcObj) {
     obj->gcObj->rc--;
     if (obj->gcObj->rc <= 0) {
@@ -64,7 +64,7 @@ void Object_free(Object* obj) {
   }
 }
 
-Object Object_pass(Object* base) {
+Object Object_pass(Object *base) {
   Object obj = *base;
   if (obj.tp->need_gc && obj.gcObj) {
     obj.gcObj->rc++;
@@ -74,7 +74,7 @@ Object Object_pass(Object* base) {
   return obj;
 }
 
-Object Object_copy(Object* base) {
+Object Object_copy(Object *base) {
   Object obj = *base;
   if (obj.tp->need_gc) {
     obj.gcObj = GC_Object_init((*obj.tp->copier)(obj.gcObj->obj));
