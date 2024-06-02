@@ -108,6 +108,11 @@
     <None Include="Makefile" />
     <ClInclude Include="ast.h" />
     <ClCompile Include="ast.c" />
+    <ClInclude Include="seq.h" />
+    <ClInclude Include="b_parse.h" />
+    <ClCompile Include="b_parse.c" />
+    <ClInclude Include="b_scope.h" />
+    <ClCompile Include="b_scope.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

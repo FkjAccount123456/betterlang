@@ -2,7 +2,8 @@
 #define AST_H
 
 #include "b_lexer.h"
-#include "b_string.h"
+#include "gc.h"
+#include "b_scope.h"
 
 typedef enum ExprType {
   INT_AST,
@@ -14,6 +15,20 @@ typedef enum ExprType {
   BUILDLIST_AST,
   INDEX_AST,
 } ExprType;
+
+typedef enum StmtType {
+  VARDECL_AST,
+  FUNCDEF_AST,
+  IF_AST,
+  WHILE_AST,
+  RETURN_AST,
+  BREAK_AST,
+  CONTINUE_AST,
+  BLOCK_AST,
+  EXPR_AST,
+  NOOP_AST,
+  ASSIGN_AST,
+} StmtType;
 
 typedef struct Expr {
   ExprType type;
@@ -44,7 +59,56 @@ typedef struct Expr {
   };
 } Expr;
 
+typedef struct Stmt {
+  StmtType type;
+  union {
+    struct {
+      size_t nvars;
+      String **varnames;
+      Expr **varvals;
+    } vardecl_ast;
+    struct {
+      String *name;
+      String **params;
+      size_t nparams;
+      struct Stmt *body;
+    } funcdef_ast;
+    struct {
+      Expr *cond;
+      struct Stmt *t, *f;
+    } if_ast;
+    struct {
+      Expr *cond;
+      struct Stmt *body;
+    } while_ast;
+    struct {
+      struct Stmt **stmts;
+      size_t nstmts;
+    } block_ast;
+    struct {
+      Expr *left, *right;
+    } assign_ast;
+    Expr *expr_ast;
+  };
+} Stmt;
+
+typedef enum RSignalType {
+  RETURN_SIGNAL,
+  BREAK_SIGNAL,
+  CONTINUE_SIGNAL,
+} RSignalType;
+
+typedef struct RunSignal {
+  RSignalType signal;
+  Object ret_val;
+} RunSignal;
+
 Expr *Expr_new(ExprType type);
 void Expr_free(Expr *expr);
+Object Expr_eval(Expr *expr, Scope *scope);
+
+Stmt *Stmt_new(StmtType type);
+void Stmt_free(Stmt *stmt);
+RunSignal Stmt_run(Stmt *stmt, Scope *scope);
 
 #endif // AST_H

@@ -49,3 +49,24 @@ void *Dict_copy(void *_base) {
   }
   return dict;
 }
+
+Object *Dict_find(Dict *dict, char *name) {
+  if (!*name)
+    return dict->val;
+  if (dict->children[*name])
+    return Dict_find(dict->children[*name], name + 1);
+  return NULL;
+}
+
+void Dict_insert(Dict *dict, char *name, Object obj) {
+  if (!*name) {
+    if (dict->val)
+      Object_free(dict->val);
+    *dict->val = obj;
+    return;
+  }
+  if (!dict->children[*name]) {
+    dict->children[*name] = Dict_new();
+  }
+  Dict_insert(dict->children[*name], name + 1, obj);
+}

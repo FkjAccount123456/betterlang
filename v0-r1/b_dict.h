@@ -12,5 +12,7 @@ Dict *Dict_new();
 void Dict_free(void *_dict);
 void *Dict_pass(void *_base);
 void *Dict_copy(void *_dict);
+Object *Dict_find(Dict *dict, char *name);
+void Dict_insert(Dict *dict, char *name, Object obj);
 
 #endif // B_DICT_H
