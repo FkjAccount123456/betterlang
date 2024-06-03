@@ -99,8 +99,25 @@ void Stmt_free(Stmt *stmt) {
     }
     free(stmt->block_ast.stmts);
     break;
+  case ASSIGN_AST:
+    Expr_free(stmt->assign_ast.left);
+    Expr_free(stmt->assign_ast.right);
+    break;
   }
   free(stmt);
+}
+
+long long _binary_operate(TokenType op, long long left, long long right) {
+  switch (op) {
+    case ADD_TOKEN:
+      return left + right;
+    case SUB_TOKEN:
+      return left - right;
+    case MUL_TOKEN:
+      return left * right;
+    case DIV_TOKEN:
+      return left / right;
+  }
 }
 
 Object Expr_eval(Expr *expr, Scope *scope) {
@@ -116,7 +133,9 @@ Object Expr_eval(Expr *expr, Scope *scope) {
       printf("Undefine variable '%s'.", expr->str_ast->val);
       exit(-1);
     }
+    return *res;
   }
+  case BINARY_AST:
   }
 }
 
