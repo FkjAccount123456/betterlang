@@ -109,14 +109,51 @@ void Stmt_free(Stmt *stmt) {
 
 long long _binary_operate(TokenType op, long long left, long long right) {
   switch (op) {
-    case ADD_TOKEN:
-      return left + right;
-    case SUB_TOKEN:
-      return left - right;
-    case MUL_TOKEN:
-      return left * right;
-    case DIV_TOKEN:
-      return left / right;
+  case ADD_TOKEN:
+    return left + right;
+  case SUB_TOKEN:
+    return left - right;
+  case MUL_TOKEN:
+    return left * right;
+  case DIV_TOKEN:
+    return left / right;
+  case MOD_TOKEN:
+    return left % right;
+  case EQ_TOKEN:
+    return left == right;
+  case NE_TOKEN:
+    return left != right;
+  case GT_TOKEN:
+    return left > right;
+  case GE_TOKEN:
+    return left >= right;
+  case LT_TOKEN:
+    return left < right;
+  case LE_TOKEN:
+    return left <= right;
+  case AND_TOKEN:
+    return left && right;
+  case OR_TOKEN:
+    return left || right;
+  case XOR_TOKEN:
+    return left ^ right;
+  default:
+    printf("Unknown binary operator.");
+    exit(-1);
+  }
+}
+
+long long _unary_operate(TokenType op, long long val) {
+  switch (op) {
+  case ADD_TOKEN:
+    return +val;
+  case SUB_TOKEN:
+    return -val;
+  case NOT_TOKEN:
+    return !val;
+  default:
+    printf("Unknown unary operator.");
+    exit(-1);
   }
 }
 
@@ -126,8 +163,7 @@ Object Expr_eval(Expr *expr, Scope *scope) {
     return Object_int(expr->int_ast);
   case STR_AST:
     return Object_gc(&strTrait, GC_Object_init(String_copy(expr->str_ast)));
-  case ID_AST:
-  {
+  case ID_AST: {
     Object *res = Scope_find(scope, expr->str_ast->val);
     if (res == NULL) {
       printf("Undefine variable '%s'.", expr->str_ast->val);
@@ -136,10 +172,18 @@ Object Expr_eval(Expr *expr, Scope *scope) {
     return *res;
   }
   case BINARY_AST:
+    return Object_int(_binary_operate(
+        expr->binary_ast.op, Expr_eval(expr->binary_ast.left, scope).intObj,
+        Expr_eval(expr->binary_ast.right, scope).intObj));
+  case UNARY_AST:
+    return Object_int(_unary_operate(
+        expr->unary_ast.op, Expr_eval(expr->unary_ast.expr, scope).intObj));
+  case CALL_AST: {
+    Object func = Expr_eval(expr->call_ast.func, scope);
+  }
   }
 }
 
 RunSignal Stmt_run(Stmt *stmt, Scope *scope) {
-  switch (stmt->type) {
-  }
+  switch (stmt->type) {}
 }
