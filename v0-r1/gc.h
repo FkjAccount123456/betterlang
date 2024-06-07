@@ -3,15 +3,19 @@
 
 #include "includes.h"
 
+typedef struct Object Object;
+
 typedef void (*Destructor)(void *);
 typedef void *(*Copier)(void *);
 typedef void *(*Passer)(void *);
+typedef bool (*ToBooler)(Object *);
 
 typedef enum ObjType {
   INT_OBJ,
   STR_OBJ,
   LIST_OBJ,
   DICT_OBJ,
+  FUNC_OBJ,
 } ObjType;
 
 typedef struct ObjTrait {
@@ -20,9 +24,10 @@ typedef struct ObjTrait {
   Destructor destructor;
   Copier copier;
   Passer passer;
+  ToBooler toBooler;
 } ObjTrait;
 
-extern ObjTrait intTrait, strTrait, listTrait;
+extern ObjTrait intTrait, strTrait, listTrait, dictTrait, funcTrait;
 void ObjTrait_init();
 
 typedef struct GC_Object {

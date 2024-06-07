@@ -1,4 +1,7 @@
+#include "b_func.h"
 #include "ast.h"
+#include "b_list.h"
+#include "b_string.h"
 
 Expr *Expr_new(ExprType type) {
   Expr *expr = (Expr *)malloc(sizeof(Expr));
@@ -179,11 +182,119 @@ Object Expr_eval(Expr *expr, Scope *scope) {
     return Object_int(_unary_operate(
         expr->unary_ast.op, Expr_eval(expr->unary_ast.expr, scope).intObj));
   case CALL_AST: {
-    Object func = Expr_eval(expr->call_ast.func, scope);
+    Object _func = Expr_eval(expr->call_ast.func, scope);
+    if (_func.tp->tp != FUNC_OBJ) {
+      printf("Expect a function.");
+      exit(-1);
+    }
+    Func *func = (Func *)_func.gcObj->obj;
+    if (func->nparams != expr->call_ast.nargs) {
+      printf("Expect %d arguments, got %d.", func->nparams,
+            expr->call_ast.nargs);
+      exit(-1);
+    }
+    Scope *call_scope = Scope_new(func->closure);
+    for (size_t i = 0; i < expr->call_ast.nargs; i++) {
+      Object arg = Expr_eval(expr->call_ast.args[i], scope);
+      Scope_define(call_scope, func->params[i]->val, arg);
+    }
+    RunSignal signal = Stmt_run(func->body, call_scope);
+    if (signal.signal == RETURN_SIGNAL) {
+      return signal.ret_val;
+    }
+    return Object_int(0);
   }
+  case BUILDLIST_AST: {
+    List *list = List_new();
+    for (size_t i = 0; i < expr->buildlist_ast.nitems; i++) {
+      Object item = Expr_eval(expr->buildlist_ast.items[i], scope);
+      List_append(list, item);
+    }
+    return Object_gc(&listTrait, GC_Object_init(list));
+  }
+  case INDEX_AST: {
+    Object _expr = Expr_eval(expr->index_ast.expr, scope);
+    if (_expr.tp->tp != LIST_OBJ) {
+      printf("Expect a list.");
+      exit(-1);
+    }
+    List *list = (List *)_expr.gcObj->obj;
+    Object _index = Expr_eval(expr->index_ast.index, scope);
+    if (_index.tp->tp != INT_OBJ) {
+      printf("Expect an integer index.");
+      exit(-1);
+    }
+    long long index = _index.intObj;
+    if (index < 0 || index >= list->size) {
+      printf("Index out of range.");
+      exit(-1);
+    }
+    return list->val[index];
+  }
+  default:
+    printf("Unknown ast type.");
+    exit(-1);
   }
 }
 
+
+RunSignal RunSignal_new(RSignalType signal, Object ret_val) {
+  RunSignal run_signal = {signal, ret_val};
+  return run_signal;
+}
+
 RunSignal Stmt_run(Stmt *stmt, Scope *scope) {
-  switch (stmt->type) {}
+  switch (stmt->type) {
+  case VARDECL_AST: {
+    for (size_t i = 0; i < stmt->vardecl_ast.nvars; i++) {
+      Object val = Expr_eval(stmt->vardecl_ast.varvals[i], scope);
+      Scope_define(scope, stmt->vardecl_ast.varnames[i]->val, val);
+    }
+    return RunSignal_new(NONE_SIGNAL, Object_int(0));
+  }
+  case FUNCDEF_AST: {
+    Func *func = (Func *)malloc(sizeof(Func));
+    if (func == NULL) {
+      printf("Failed to malloc");
+      exit(-1);
+    }
+    func->nparams = stmt->funcdef_ast.nparams;
+    func->params = stmt->funcdef_ast.params;
+    func->body = stmt->funcdef_ast.body;
+    func->closure = Scope_pass(scope);
+    Scope_define(scope, stmt->funcdef_ast.name->val, Object_gc(&funcTrait, GC_Object_init(func)));
+    return RunSignal_new(NONE_SIGNAL, Object_int(0));
+  }
+  case IF_AST: {
+    Scope *new_scope = Scope_new(scope);
+    Object cond = Expr_eval(stmt->if_ast.cond, new_scope);
+    RunSignal res;
+    if ((*cond.tp->toBooler)(&cond)) {
+      res = Stmt_run(stmt->if_ast.t, new_scope);
+    } else if (stmt->if_ast.f != NULL) {
+      res = Stmt_run(stmt->if_ast.f, new_scope);
+    } else {
+      res = RunSignal_new(NONE_SIGNAL, Object_int(0));
+    }
+    Scope_free(new_scope);
+    return res;
+  }
+  case WHILE_AST: {
+    Scope *new_scope = Scope_new(scope);
+    Object cond = Expr_eval(stmt->while_ast.cond, scope);
+    RunSignal res;
+    while ((*cond.tp->toBooler)(&cond)) {
+      RunSignal signal = Stmt_run(stmt->while_ast.body, new_scope);
+      if (signal.signal == RETURN_SIGNAL) {
+        res = signal;
+        break;
+      } else if (signal.signal == BREAK_SIGNAL) {
+        res = RunSignal_new(NONE_SIGNAL, Object_int(0));
+        break;
+      }
+      cond = Expr_eval(stmt->while_ast.cond, scope);
+    }
+    Scope_free(new_scope);
+  }
+  }
 }

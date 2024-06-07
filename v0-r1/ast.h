@@ -96,12 +96,15 @@ typedef enum RSignalType {
   RETURN_SIGNAL,
   BREAK_SIGNAL,
   CONTINUE_SIGNAL,
+  NONE_SIGNAL,
 } RSignalType;
 
 typedef struct RunSignal {
   RSignalType signal;
   Object ret_val;
 } RunSignal;
+
+RunSignal RunSignal_new(RSignalType signal, Object ret_val);
 
 Expr *Expr_new(ExprType type);
 void Expr_free(Expr *expr);

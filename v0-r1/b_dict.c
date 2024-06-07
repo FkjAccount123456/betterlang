@@ -70,3 +70,13 @@ void Dict_insert(Dict *dict, char *name, Object obj) {
   }
   Dict_insert(dict->children[*name], name + 1, obj);
 }
+
+size_t Dict_size(Dict *dict) {
+  size_t size = 0;
+  for (size_t i = 0; i < 128; i++)
+    if (dict->children[i])
+      size += Dict_size(dict->children[i]);
+  if (dict->val)
+    size++;
+  return size;
+}

@@ -2,30 +2,62 @@
 #include "b_dict.h"
 #include "b_list.h"
 #include "b_string.h"
+#include "b_func.h"
 
-ObjTrait intTrait, strTrait, listTrait, dictTrait;
+ObjTrait intTrait, strTrait, listTrait, dictTrait, funcTrait;
+
+bool intObj_toBool(Object *obj) {
+  return obj->intObj;
+}
+
+bool strObj_toBool(Object *obj) {
+  return ((String *)obj->gcObj->obj)->size;
+}
+
+bool listObj_toBool(Object *obj) {
+  return ((List *)obj->gcObj->obj)->size;
+}
+
+bool dictObj_toBool(Object *obj) {
+  return Dict_size(obj->gcObj->obj);
+}
+
+bool funcObj_toBool(Object *obj) {
+  return true;
+}
 
 void ObjTrait_init() {
   intTrait.need_gc = false;
   intTrait.tp = INT_OBJ;
+  intTrait.toBooler = intObj_toBool;
 
   strTrait.need_gc = true;
   strTrait.tp = STR_OBJ;
   strTrait.copier = String_copy;
   strTrait.destructor = String_free;
   strTrait.passer = NULL;
+  strTrait.toBooler = strObj_toBool;
 
   listTrait.need_gc = true;
   listTrait.tp = LIST_OBJ;
   listTrait.copier = List_copy;
   listTrait.destructor = List_free;
   listTrait.passer = List_pass;
+  listTrait.toBooler = listObj_toBool;
 
   dictTrait.need_gc = true;
   dictTrait.tp = DICT_OBJ;
   dictTrait.copier = Dict_copy;
   dictTrait.destructor = Dict_free;
   dictTrait.passer = Dict_pass;
+  dictTrait.toBooler = dictObj_toBool;
+
+  funcTrait.need_gc = true;
+  funcTrait.tp = FUNC_OBJ;
+  funcTrait.copier = Func_pass;
+  funcTrait.destructor = Func_free;
+  funcTrait.passer = Func_pass;
+  funcTrait.toBooler = funcObj_toBool;
 }
 
 GC_Object *GC_Object_init(void *obj) {

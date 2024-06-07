@@ -214,6 +214,31 @@ Stmt *Parser_stmt(Lexer *l) {
     res->funcdef_ast.nparams = params_size;
     res->funcdef_ast.params = params_val;
     return res;
+  } else if (l->token->tp == IF_TOKEN) {
+    Lexer_next(l);
+    Stmt *res = Stmt_new(IF_AST);
+    res->if_ast.cond = Parser_expr(l);
+    res->if_ast.t = Parser_block(l);
+    res->if_ast.f = NULL;
+    for (Stmt *cur = res->if_ast.f; l->token->tp == ELSE_TOKEN; cur = cur->if_ast.f) {
+      Lexer_next(l);
+      if (l->token->tp == IF_TOKEN) {
+        Lexer_next(l);
+        cur->if_ast.cond = Parser_expr(l);
+        cur->if_ast.t = Parser_block(l);
+        cur->if_ast.f = NULL;
+      } else {
+        cur->if_ast.f = Parser_block(l);
+        break;
+      }
+    }
+    return res;
+  } else if (l->token->tp == WHILE_TOKEN) {
+    Lexer_next(l);
+    Stmt *res = Stmt_new(WHILE_AST);
+    res->while_ast.cond = Parser_expr(l);
+    res->while_ast.body = Parser_block(l);
+    return res;
   } else {
     Expr *left = Parser_expr(l);
     if (l->token && l->token->tp == ASSIGN_TOKEN) {
