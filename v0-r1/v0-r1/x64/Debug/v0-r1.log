@@ -1,2 +1,0 @@
-﻿  cc    -c -o b_dict.o b_dict.c
-  clang gc.o b_list.o b_string.o b_dict.o v0-r1.c -o program
