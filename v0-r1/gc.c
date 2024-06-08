@@ -4,7 +4,7 @@
 #include "b_string.h"
 #include "b_func.h"
 
-ObjTrait intTrait, strTrait, listTrait, dictTrait, funcTrait;
+ObjTrait intTrait, strTrait, listTrait, dictTrait, funcTrait, builtinfuncTrait;
 
 bool intObj_toBool(Object *obj) {
   return obj->intObj;
@@ -26,10 +26,37 @@ bool funcObj_toBool(Object *obj) {
   return true;
 }
 
+void intObj_print(Object *obj) {
+  printf("%lld", obj->intObj);
+}
+
+void strObj_print(Object *obj) {
+  printf("\"%s\"", ((String *)obj->gcObj->obj)->val);
+}
+
+void listObj_print(Object *obj) {
+  List *list = obj->gcObj->obj;
+  printf("[");
+  if (list->size) {
+    (*list->val[0].tp->printer)(&list->val[0]);
+    for (size_t i = 1; i < list->size; i++) {
+      printf(", ");
+      (*list->val[i].tp->printer)(&list->val[i]);
+    }
+  }
+  printf("]");
+}
+
+void err_print(Object *obj) {
+  printf("Failed to print object.");
+  exit(-1);
+}
+
 void ObjTrait_init() {
   intTrait.need_gc = false;
   intTrait.tp = INT_OBJ;
   intTrait.toBooler = intObj_toBool;
+  intTrait.printer = intObj_print;
 
   strTrait.need_gc = true;
   strTrait.tp = STR_OBJ;
@@ -37,6 +64,7 @@ void ObjTrait_init() {
   strTrait.destructor = String_free;
   strTrait.passer = NULL;
   strTrait.toBooler = strObj_toBool;
+  strTrait.printer = strObj_print;
 
   listTrait.need_gc = true;
   listTrait.tp = LIST_OBJ;
@@ -44,6 +72,7 @@ void ObjTrait_init() {
   listTrait.destructor = List_free;
   listTrait.passer = List_pass;
   listTrait.toBooler = listObj_toBool;
+  listTrait.printer = listObj_print;
 
   dictTrait.need_gc = true;
   dictTrait.tp = DICT_OBJ;
@@ -51,6 +80,7 @@ void ObjTrait_init() {
   dictTrait.destructor = Dict_free;
   dictTrait.passer = Dict_pass;
   dictTrait.toBooler = dictObj_toBool;
+  dictTrait.printer = err_print;
 
   funcTrait.need_gc = true;
   funcTrait.tp = FUNC_OBJ;
@@ -58,6 +88,12 @@ void ObjTrait_init() {
   funcTrait.destructor = Func_free;
   funcTrait.passer = Func_pass;
   funcTrait.toBooler = funcObj_toBool;
+  funcTrait.printer = err_print;
+
+  builtinfuncTrait.need_gc = false;
+  builtinfuncTrait.tp = BUILTINFUNC_OBJ;
+  builtinfuncTrait.toBooler = funcObj_toBool;
+  builtinfuncTrait.printer = err_print;
 }
 
 GC_Object *GC_Object_init(void *obj) {

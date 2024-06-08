@@ -1,0 +1,8 @@
+#ifndef B_STD_H
+#define B_STD_H
+
+#include "b_scope.h"
+
+Scope *std_scope();
+
+#endif // B_STD_H
