@@ -268,3 +268,16 @@ Stmt *Parser_block(Lexer *l) {
   stmt->block_ast.stmts = stmts_val;
   return stmt;
 }
+
+Stmt *Parser_program(Lexer *l) {
+  Parser_eat(l, BEGIN_TOKEN);
+  NewSeq(Stmt *, stmts);
+  while (l->token) {
+    SeqAppend(Stmt *, stmts, Parser_stmt(l));
+  }
+  Parser_eat(l, END_TOKEN);
+  Stmt *stmt = Stmt_new(BLOCK_AST);
+  stmt->block_ast.nstmts = stmts_size;
+  stmt->block_ast.stmts = stmts_val;
+  return stmt;
+}

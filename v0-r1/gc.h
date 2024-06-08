@@ -47,6 +47,7 @@ typedef struct Object {
   union {
     GC_Object *gcObj;
     long long intObj;
+    BuiltinFunc builtinfuncObj;
   };
 } Object;
 

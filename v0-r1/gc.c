@@ -1,34 +1,23 @@
 #include "gc.h"
 #include "b_dict.h"
+#include "b_func.h"
 #include "b_list.h"
 #include "b_string.h"
-#include "b_func.h"
+
 
 ObjTrait intTrait, strTrait, listTrait, dictTrait, funcTrait, builtinfuncTrait;
 
-bool intObj_toBool(Object *obj) {
-  return obj->intObj;
-}
+bool intObj_toBool(Object *obj) { return obj->intObj; }
 
-bool strObj_toBool(Object *obj) {
-  return ((String *)obj->gcObj->obj)->size;
-}
+bool strObj_toBool(Object *obj) { return ((String *)obj->gcObj->obj)->size; }
 
-bool listObj_toBool(Object *obj) {
-  return ((List *)obj->gcObj->obj)->size;
-}
+bool listObj_toBool(Object *obj) { return ((List *)obj->gcObj->obj)->size; }
 
-bool dictObj_toBool(Object *obj) {
-  return Dict_size(obj->gcObj->obj);
-}
+bool dictObj_toBool(Object *obj) { return Dict_size(obj->gcObj->obj); }
 
-bool funcObj_toBool(Object *obj) {
-  return true;
-}
+bool funcObj_toBool(Object *obj) { return true; }
 
-void intObj_print(Object *obj) {
-  printf("%lld", obj->intObj);
-}
+void intObj_print(Object *obj) { printf("%lld", obj->intObj); }
 
 void strObj_print(Object *obj) {
   printf("\"%s\"", ((String *)obj->gcObj->obj)->val);
@@ -105,6 +94,13 @@ GC_Object *GC_Object_init(void *obj) {
   gc->obj = obj;
   gc->rc = 1;
   return gc;
+}
+
+Object Object_builtinfunc(BuiltinFunc func) {
+  Object obj;
+  obj.tp = &builtinfuncTrait;
+  obj.builtinfuncObj = func;
+  return obj;
 }
 
 Object Object_int(long long intObj) {

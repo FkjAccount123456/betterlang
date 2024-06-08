@@ -12,4 +12,6 @@ Expr *Parser_factor(Lexer *l);
 Stmt *Parser_stmt(Lexer *l);
 Stmt *Parser_block(Lexer *l);
 
+Stmt *Parser_program(Lexer *l);
+
 #endif // B_PARSE_H

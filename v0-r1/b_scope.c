@@ -24,8 +24,8 @@ void Scope_free(Scope *scope) {
 
 Scope *Scope_pass(Scope *base) {
   base->rc++;
-  if (scope->parent) {
-    Scope_pass(scope->parent);
+  if (base->parent) {
+    Scope_pass(base->parent);
   }
   return base;
 }
