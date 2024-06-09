@@ -1,6 +1,7 @@
 #include "b_std.h"
 
 Object _std_Print(size_t nargs, Object *args) {
+  // puts("Hello!");
   for (size_t i = 0; i < nargs; i++) {
     (*args[i].tp->printer)(&args[i]);
   }

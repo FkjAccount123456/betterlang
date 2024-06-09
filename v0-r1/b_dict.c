@@ -62,6 +62,8 @@ void Dict_insert(Dict *dict, char *name, Object obj) {
   if (!*name) {
     if (dict->val)
       Object_free(dict->val);
+    else
+      dict->val = (Object *)malloc(sizeof(Object));
     *dict->val = obj;
     return;
   }

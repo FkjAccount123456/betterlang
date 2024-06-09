@@ -10,10 +10,12 @@ void Parser_eat(Lexer *l, TokenType tp) {
     printf("Unexpected token.");
     exit(-1);
   }
+  // printf("pass: %d\n", l->token->tp);
   Lexer_next(l);
 }
 
 Expr *Parser_factor(Lexer *l) {
+  // puts("Parser_factor");
   Expr *res;
   if (l->token == NULL) {
     printf("Unexpected EOF.");
@@ -21,6 +23,10 @@ Expr *Parser_factor(Lexer *l) {
   } else if (l->token->tp == INT_TOKEN) {
     res = Expr_new(INT_AST);
     res->int_ast = l->token->intToken;
+    Lexer_next(l);
+  } else if (l->token->tp == STR_TOKEN) {
+    res = Expr_new(STR_AST);
+    res->str_ast = l->token->strToken;
     Lexer_next(l);
   } else if (l->token->tp == ID_TOKEN) {
     res = Expr_new(ID_AST);
@@ -52,7 +58,7 @@ Expr *Parser_factor(Lexer *l) {
     res->unary_ast.expr = Parser_expr(l);
     return res;
   } else {
-    printf("Unexpected token.");
+    printf("Unexpected token %d.", l->token->tp);
     exit(-1);
   }
 
@@ -84,12 +90,15 @@ Expr *Parser_factor(Lexer *l) {
       break;
     }
   }
+  // printf("tp: %d\n", res->type);
   return res;
 }
 
 Expr *Parser_expr(Lexer *l) {
+  // puts("Parser_expr");
   NewSeq(TokenType, op_stack);
   NewSeq(Expr *, res_stack);
+  SeqAppend(Expr *, res_stack, Parser_factor(l));
   while (l->token && op_prio[l->token->tp]) {
     TokenType op = l->token->tp;
     Lexer_next(l);
@@ -115,6 +124,7 @@ Expr *Parser_expr(Lexer *l) {
   Expr *res = SeqBack(res_stack);
   FreeSeq(res_stack);
   FreeSeq(op_stack);
+  // printf("tp: %d\n", res->type);
   return res;
 }
 
@@ -197,6 +207,7 @@ Stmt *Parser_stmt(Lexer *l) {
         exit(-1);
       }
       SeqAppend(String *, params, l->token->strToken);
+      Lexer_next(l);
       while (l->token && l->token->tp == COMMA_TOKEN) {
         Lexer_next(l);
         if (!l->token || l->token->tp != ID_TOKEN) {
@@ -204,6 +215,7 @@ Stmt *Parser_stmt(Lexer *l) {
           exit(-1);
         }
         SeqAppend(String *, params, l->token->strToken);
+        Lexer_next(l);
       }
     }
     Parser_eat(l, RPAREN_TOKEN);
@@ -252,6 +264,7 @@ Stmt *Parser_stmt(Lexer *l) {
     }
     Parser_eat(l, SEMI_TOKEN);
     Stmt *res = Stmt_new(EXPR_AST);
+    res->expr_ast = left;
     return res;
   }
 }
@@ -270,12 +283,10 @@ Stmt *Parser_block(Lexer *l) {
 }
 
 Stmt *Parser_program(Lexer *l) {
-  Parser_eat(l, BEGIN_TOKEN);
   NewSeq(Stmt *, stmts);
   while (l->token) {
     SeqAppend(Stmt *, stmts, Parser_stmt(l));
   }
-  Parser_eat(l, END_TOKEN);
   Stmt *stmt = Stmt_new(BLOCK_AST);
   stmt->block_ast.nstmts = stmts_size;
   stmt->block_ast.stmts = stmts_val;

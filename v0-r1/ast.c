@@ -2,6 +2,8 @@
 #include "b_func.h"
 #include "b_list.h"
 #include "b_string.h"
+#include "seq.h"
+// #include "b_std.h"
 
 Expr *Expr_new(ExprType type) {
   Expr *expr = (Expr *)malloc(sizeof(Expr));
@@ -106,6 +108,9 @@ void Stmt_free(Stmt *stmt) {
     Expr_free(stmt->assign_ast.left);
     Expr_free(stmt->assign_ast.right);
     break;
+  default:
+    printf("Unknown ast type.");
+    exit(-1);
   }
   free(stmt);
 }
@@ -161,6 +166,7 @@ long long _unary_operate(TokenType op, long long val) {
 }
 
 Object Expr_eval(Expr *expr, Scope *scope) {
+  // printf("Expr_eval: %d\n", expr->type);
   switch (expr->type) {
   case INT_AST:
     return Object_int(expr->int_ast);
@@ -183,6 +189,21 @@ Object Expr_eval(Expr *expr, Scope *scope) {
         expr->unary_ast.op, Expr_eval(expr->unary_ast.expr, scope).intObj));
   case CALL_AST: {
     Object _func = Expr_eval(expr->call_ast.func, scope);
+    if (_func.tp->tp == BUILTINFUNC_OBJ) {
+      BuiltinFunc func = _func.builtinfuncObj;
+      NewSeq(Object, args);
+      for (size_t i = 0; i < expr->call_ast.nargs; i++) {
+        Object arg = Expr_eval(expr->call_ast.args[i], scope);
+        SeqAppend(Object, args, arg);
+      }
+      // printf("fn: %d %d\n", func, _std_Print);
+      Object res = func(expr->call_ast.nargs, args_val);
+      for (size_t i = 0; i < expr->call_ast.nargs; i++) {
+        Object_free(&args_val[i]);
+      }
+      FreeSeq(args);
+      return res;
+    }
     if (_func.tp->tp != FUNC_OBJ) {
       printf("Expect a function.");
       exit(-1);
@@ -232,7 +253,7 @@ Object Expr_eval(Expr *expr, Scope *scope) {
     return Object_pass(&list->val[index]);
   }
   default:
-    printf("Unknown ast type.");
+    printf("Unknown ast type %d.", expr->type);
     exit(-1);
   }
 }
@@ -243,6 +264,7 @@ RunSignal RunSignal_new(RSignalType signal, Object ret_val) {
 }
 
 RunSignal Stmt_run(Stmt *stmt, Scope *scope) {
+  // printf("Stmt_run: %d\n", stmt->type);
   switch (stmt->type) {
   case VARDECL_AST: {
     for (size_t i = 0; i < stmt->vardecl_ast.nvars; i++) {

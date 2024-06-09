@@ -4,7 +4,6 @@
 #include "b_list.h"
 #include "b_string.h"
 
-
 ObjTrait intTrait, strTrait, listTrait, dictTrait, funcTrait, builtinfuncTrait;
 
 bool intObj_toBool(Object *obj) { return obj->intObj; }
@@ -20,7 +19,7 @@ bool funcObj_toBool(Object *obj) { return true; }
 void intObj_print(Object *obj) { printf("%lld", obj->intObj); }
 
 void strObj_print(Object *obj) {
-  printf("\"%s\"", ((String *)obj->gcObj->obj)->val);
+  printf("%s", ((String *)obj->gcObj->obj)->val);
 }
 
 void listObj_print(Object *obj) {

@@ -38,8 +38,9 @@ void quit() { Scope_free(scope); }
 
 int main() {
   init();
-  puts("Hello!");
-  // run_file("test.txt");
-  // quit();
+  run_file("test.txt");
+  // puts("Hello!");
+  quit();
+  // puts("Hello!");
   return 0;
 }
