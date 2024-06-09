@@ -178,15 +178,31 @@ Object Expr_eval(Expr *expr, Scope *scope) {
       printf("Undefine variable '%s'.", expr->str_ast->val);
       exit(-1);
     }
-    return Object_pass(res);
+    return Object_pass(res, 1);
   }
-  case BINARY_AST:
-    return Object_int(_binary_operate(
-        expr->binary_ast.op, Expr_eval(expr->binary_ast.left, scope).intObj,
-        Expr_eval(expr->binary_ast.right, scope).intObj));
-  case UNARY_AST:
-    return Object_int(_unary_operate(
-        expr->unary_ast.op, Expr_eval(expr->unary_ast.expr, scope).intObj));
+  case BINARY_AST: {
+    Object left = Expr_eval(expr->binary_ast.left, scope);
+    Object right = Expr_eval(expr->binary_ast.right, scope);
+    if (left.tp->tp != INT_OBJ || right.tp->tp != INT_OBJ) {
+      printf("Expect two integers.");
+      exit(-1);
+    }
+    Object res = Object_int(
+        _binary_operate(expr->binary_ast.op, left.intObj, right.intObj));
+    Object_free(&left);
+    Object_free(&right);
+    return res;
+  }
+  case UNARY_AST: {
+    Object val = Expr_eval(expr->unary_ast.expr, scope);
+    if (val.tp->tp != INT_OBJ) {
+      printf("Expect an integer.");
+      exit(-1);
+    }
+    Object res = Object_int(_unary_operate(expr->unary_ast.op, val.intObj));
+    Object_free(&val);
+    return res;
+  }
   case CALL_AST: {
     Object _func = Expr_eval(expr->call_ast.func, scope);
     if (_func.tp->tp == BUILTINFUNC_OBJ) {
@@ -220,6 +236,7 @@ Object Expr_eval(Expr *expr, Scope *scope) {
       Scope_define(call_scope, func->params[i]->val, arg);
     }
     RunSignal signal = Stmt_run(func->body, call_scope);
+    Scope_free(call_scope);
     if (signal.signal == RETURN_SIGNAL) {
       return signal.ret_val;
     }
@@ -241,6 +258,7 @@ Object Expr_eval(Expr *expr, Scope *scope) {
       exit(-1);
     }
     // puts("Hello!");
+    // printf("Rc list: %d\n", _list.gcObj->rc);
     List *list = (List *)_list.gcObj->obj;
     Object _index = Expr_eval(expr->index_ast.index, scope);
     if (_index.tp->tp != INT_OBJ) {
@@ -252,7 +270,22 @@ Object Expr_eval(Expr *expr, Scope *scope) {
       printf("Index out of range.");
       exit(-1);
     }
-    return Object_pass(&list->val[index]);
+    // if (list->val[index].tp->need_gc) {
+    //   printf("Rc list: %d\n", _list.gcObj->rc);
+    //   printf("Rc res: %d\n", list->val[index].gcObj->rc);
+    // }
+    Object res = Object_pass(&list->val[index], 1);
+    // if (res.tp->need_gc) {
+    //   printf("Rc list: %d\n", _list.gcObj->rc);
+    //   printf("Rc res: %d\n", res.gcObj->rc);
+    // }
+    Object_free(&_list);
+    Object_free(&_index);
+    // if (res.tp->need_gc) {
+    //   printf("Rc list: %d\n", _list.gcObj->rc);
+    //   printf("Rc res: %d\n", res.gcObj->rc);
+    // }
+    return res;
   }
   default:
     printf("Unknown ast type %d.", expr->type);
@@ -317,6 +350,7 @@ RunSignal Stmt_run(Stmt *stmt, Scope *scope) {
         res = RunSignal_new(NONE_SIGNAL, Object_int(0));
         break;
       }
+      Object_free(&cond);
       cond = Expr_eval(stmt->while_ast.cond, scope);
     }
     Object_free(&cond);
@@ -331,15 +365,12 @@ RunSignal Stmt_run(Stmt *stmt, Scope *scope) {
   case CONTINUE_AST:
     return RunSignal_new(CONTINUE_SIGNAL, Object_int(0));
   case BLOCK_AST: {
-    Scope *new_scope = Scope_new(scope);
     for (size_t i = 0; i < stmt->block_ast.nstmts; i++) {
-      RunSignal res = Stmt_run(stmt->block_ast.stmts[i], new_scope);
+      RunSignal res = Stmt_run(stmt->block_ast.stmts[i], scope);
       if (res.signal != NONE_SIGNAL) {
-        Scope_free(new_scope);
         return res;
       }
     }
-    Scope_free(new_scope);
     return RunSignal_new(NONE_SIGNAL, Object_int(0));
   }
   case EXPR_AST: {
@@ -378,6 +409,8 @@ RunSignal Stmt_run(Stmt *stmt, Scope *scope) {
       }
       Object_free(&list->val[index]);
       list->val[index] = right;
+      Object_free(&base);
+      Object_free(&_index);
     } else {
       printf("Expect an l-value.");
       exit(-1);

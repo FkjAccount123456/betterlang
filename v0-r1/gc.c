@@ -72,7 +72,7 @@ void ObjTrait_init() {
 
   funcTrait.need_gc = true;
   funcTrait.tp = FUNC_OBJ;
-  funcTrait.copier = Func_pass;
+  funcTrait.copier = NULL;
   funcTrait.destructor = Func_free;
   funcTrait.passer = Func_pass;
   funcTrait.toBooler = funcObj_toBool;
@@ -118,8 +118,14 @@ Object Object_gc(ObjTrait *trait, GC_Object *gcObj) {
 
 void Object_free(Object *obj) {
   if (obj->tp->need_gc && obj->gcObj) {
-    obj->gcObj->rc--;
+    Object_pass(obj, -1);
+    printf("InitFree tp = %d rc = %d: ", obj->tp->tp, obj->gcObj->rc);
+    (*obj->tp->printer)(obj);
+    puts("");
     if (obj->gcObj->rc <= 0) {
+      printf("Free tp = %d: ", obj->tp->tp);
+      (*obj->tp->printer)(obj);
+      puts("");
       (*obj->tp->destructor)(obj->gcObj->obj);
       free(obj->gcObj);
       obj->gcObj = NULL;
@@ -127,12 +133,12 @@ void Object_free(Object *obj) {
   }
 }
 
-Object Object_pass(Object *base) {
+Object Object_pass(Object *base, size_t rc_offset) {
   Object obj = *base;
   if (obj.tp->need_gc && obj.gcObj) {
-    obj.gcObj->rc++;
+    obj.gcObj->rc += rc_offset;
     if (obj.tp->passer)
-      obj.gcObj->obj = (*obj.tp->passer)(obj.gcObj->obj);
+      obj.gcObj->obj = (*obj.tp->passer)(obj.gcObj->obj, rc_offset);
   }
   return obj;
 }

@@ -15,19 +15,19 @@ void Dict_free(void *_dict) {
   Dict *dict = (Dict *)_dict;
   for (size_t i = 0; i < 128; i++)
     if (dict->children[i])
-      free(dict->children[i]), dict->children[i] = NULL;
+      Dict_free(dict->children[i]), dict->children[i] = NULL;
   if (dict->val)
-    free(dict->val);
+    Object_free(dict->val);
   free(dict);
 }
 
-void *Dict_pass(void *_dict) {
+void *Dict_pass(void *_dict, size_t rc_offset) {
   Dict *dict = (Dict *)_dict;
   for (size_t i = 0; i < 128; i++)
     if (dict->children[i])
-      dict->children[i] = (Dict *)Dict_pass(dict->children[i]);
+      dict->children[i] = (Dict *)Dict_pass(dict->children[i], rc_offset);
   if (dict->val)
-    *dict->val = Object_pass(dict->val);
+    *dict->val = Object_pass(dict->val, rc_offset);
   return dict;
 }
 

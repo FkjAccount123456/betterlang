@@ -19,15 +19,21 @@ func test_list() {
 
 func test_list2() {
     var list = [1, 2, [2, 4, 5]];
+    # Print("Rc: ", GetRc(list[2]), "\n");
+    # Print("Rc: ", GetRc(list[2]), "\n");
     Print(list, " ", list[2][0], "\n");
+    Print(list[2], "\n");
     list[2][0] = 3;
     Print(list, " ", list[2][0], "\n");
+    # Print("Rc: ", GetRc(list[2]), "\n");
 }
 
+if 0 {
 main("world");
 main("betterlang");
 Print(fac(10), "\n");
 Print(1 + 2 * 3, "\n");
 Print((1 + 2) * 3, "\n");
 test_list();
+}
 test_list2();

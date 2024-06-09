@@ -9,7 +9,7 @@ typedef Object (*BuiltinFunc)(size_t, Object *);
 
 typedef void (*Destructor)(void *);
 typedef void *(*Copier)(void *);
-typedef void *(*Passer)(void *);
+typedef void *(*Passer)(void *, size_t);
 typedef bool (*ToBooler)(Object *);
 typedef void (*Printer)(Object *);
 
@@ -55,7 +55,7 @@ Object Object_builtinfunc(BuiltinFunc func);
 Object Object_int(long long intObj);
 Object Object_gc(ObjTrait *trait, GC_Object *gcObj);
 void Object_free(Object *obj);
-Object Object_pass(Object *base);
+Object Object_pass(Object *base, size_t rc_offset);
 Object Object_copy(Object *base);
 
 #endif // GC_H

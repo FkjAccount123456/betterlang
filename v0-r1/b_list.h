@@ -11,7 +11,7 @@ typedef struct List {
 List *List_new();
 void *List_copy(void *base);
 void List_free(void *list);
-void *List_pass(void *list);
+void *List_pass(void *list, size_t rc_offset);
 void List_append(List *list, Object obj);
 
 #endif // B_LIST_H

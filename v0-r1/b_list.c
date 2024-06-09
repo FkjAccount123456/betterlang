@@ -30,7 +30,7 @@ void *List_copy(void *base) {
     exit(-1);
   }
   for (size_t i = 0; i < list->size; i++) {
-    list->val[i] = Object_pass(&list->val[i]);
+    list->val[i] = Object_pass(&list->val[i], 1);
   }
   return list;
 }
@@ -43,9 +43,9 @@ void List_free(void *list) {
   free(list);
 }
 
-void *List_pass(void *base) {
+void *List_pass(void *base, size_t rc_offset) {
   for (size_t i = 0; i < ((List *)base)->size; i++) {
-    ((List *)base)->val[i] = Object_pass(&((List *)base)->val[i]);
+    ((List *)base)->val[i] = Object_pass(&((List *)base)->val[i], rc_offset);
   }
   return base;
 }

@@ -14,6 +14,7 @@ Scope *Scope_new(Scope *parent) {
 
 void Scope_free(Scope *scope) {
   scope->rc--;
+  // printf("Scope_free: rc = %d\n", scope->rc);
   if (scope->parent)
     Scope_free(scope->parent);
   if (!scope->rc) {
