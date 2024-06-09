@@ -3,12 +3,31 @@ func main(name) {
 }
 
 func fac(num) {
+    # Print("fac", num, "\n");
     if (num == 0) {
         return 1;
     }
     return num * fac(num - 1);
 }
 
+func test_list() {
+    var list = [1, 2, 2, 4, 5];
+    Print(list, " ", list[2], "\n");
+    list[2] = 3;
+    Print(list, " ", list[2], "\n");
+}
+
+func test_list2() {
+    var list = [1, 2, [2, 4, 5]];
+    Print(list, " ", list[2][0], "\n");
+    list[2][0] = 3;
+    Print(list, " ", list[2][0], "\n");
+}
+
 main("world");
 main("betterlang");
-Print(fac(10));
+Print(fac(10), "\n");
+Print(1 + 2 * 3, "\n");
+Print((1 + 2) * 3, "\n");
+test_list();
+test_list2();

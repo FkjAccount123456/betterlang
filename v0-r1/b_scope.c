@@ -7,7 +7,7 @@ Scope *Scope_new(Scope *parent) {
     exit(-1);
   }
   scope->vars = Dict_new();
-  scope->parent = parent;
+  scope->parent = Scope_pass(parent);
   scope->rc = 1;
   return scope;
 }
@@ -23,6 +23,8 @@ void Scope_free(Scope *scope) {
 }
 
 Scope *Scope_pass(Scope *base) {
+  if (base == NULL)
+    return NULL;
   base->rc++;
   if (base->parent) {
     Scope_pass(base->parent);

@@ -7,7 +7,7 @@
 
 void Parser_eat(Lexer *l, TokenType tp) {
   if (!l->token || l->token->tp != tp) {
-    printf("Unexpected token.");
+    printf("Unexpected token %d %d.", l->token->tp, tp);
     exit(-1);
   }
   // printf("pass: %d\n", l->token->tp);
@@ -84,8 +84,9 @@ Expr *Parser_factor(Lexer *l) {
       Expr *expr = res;
       Expr *index = Parser_expr(l);
       res = Expr_new(INDEX_AST);
-      res->index_ast.expr = res;
+      res->index_ast.expr = expr;
       res->index_ast.index = index;
+      Parser_eat(l, RSQBR_TOKEN);
     } else {
       break;
     }
@@ -169,7 +170,7 @@ Stmt *Parser_stmt(Lexer *l) {
       zero->int_ast = 0;
       SeqAppend(Expr *, varvals, zero);
     }
-    while (l->token && l->token->tp == SEMI_TOKEN) {
+    while (l->token && l->token->tp == COMMA_TOKEN) {
       if (!l->token || l->token->tp != ID_TOKEN) {
         printf("Expect an identifier.");
         exit(-1);
@@ -232,15 +233,18 @@ Stmt *Parser_stmt(Lexer *l) {
     res->if_ast.cond = Parser_expr(l);
     res->if_ast.t = Parser_block(l);
     res->if_ast.f = NULL;
-    for (Stmt *cur = res->if_ast.f; l->token->tp == ELSE_TOKEN; cur = cur->if_ast.f) {
+    for (Stmt **cur = &res->if_ast.f; l->token->tp == ELSE_TOKEN; cur = &(*cur)->if_ast.f) {
       Lexer_next(l);
       if (l->token->tp == IF_TOKEN) {
+        if (!*cur) {
+          *cur = Stmt_new(IF_AST);
+        }
         Lexer_next(l);
-        cur->if_ast.cond = Parser_expr(l);
-        cur->if_ast.t = Parser_block(l);
-        cur->if_ast.f = NULL;
+        (*cur)->if_ast.cond = Parser_expr(l);
+        (*cur)->if_ast.t = Parser_block(l);
+        (*cur)->if_ast.f = NULL;
       } else {
-        cur->if_ast.f = Parser_block(l);
+        *cur = Parser_block(l);
         break;
       }
     }

@@ -234,12 +234,14 @@ Object Expr_eval(Expr *expr, Scope *scope) {
     return Object_gc(&listTrait, GC_Object_init(list));
   }
   case INDEX_AST: {
-    Object _expr = Expr_eval(expr->index_ast.expr, scope);
-    if (_expr.tp->tp != LIST_OBJ) {
+    // printf("INDEX_AST %d\n", expr->index_ast.expr->type);
+    Object _list = Expr_eval(expr->index_ast.expr, scope);
+    if (_list.tp->tp != LIST_OBJ) {
       printf("Expect a list.");
       exit(-1);
     }
-    List *list = (List *)_expr.gcObj->obj;
+    // puts("Hello!");
+    List *list = (List *)_list.gcObj->obj;
     Object _index = Expr_eval(expr->index_ast.index, scope);
     if (_index.tp->tp != INT_OBJ) {
       printf("Expect an integer index.");
