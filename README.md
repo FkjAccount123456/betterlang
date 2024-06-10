@@ -3,7 +3,8 @@
 
 # 编译运行这个项目
 ```bash
-make build
+编译：make build
+运行：make run
 ```
 
 # 功能与示例
