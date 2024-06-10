@@ -77,6 +77,13 @@ func test_Append() {
         Print(list, "\n");
         Append(list, Len(list) + 1);
     }
+    var str = "";
+    var i = 48;
+    while i <= 58 {
+        Print(str, "\n");
+        Append(str, i);
+        i = i + 1;
+    }
 }
 
 main("world");
