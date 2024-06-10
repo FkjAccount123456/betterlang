@@ -24,6 +24,7 @@ func test_list2() {
     Print(list, " ", list[2][0], "\n");
     Print(list[2], "\n");
     list[2][0] = 3;
+    Print(list[2], "\n");
     Print(list, " ", list[2][0], "\n");
     # Print("Rc: ", GetRc(list[2]), "\n");
 }

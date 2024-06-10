@@ -119,13 +119,23 @@ Object Object_gc(ObjTrait *trait, GC_Object *gcObj) {
 void Object_free(Object *obj) {
   if (obj->tp->need_gc && obj->gcObj) {
     Object_pass(obj, -1);
-    printf("InitFree tp = %d rc = %d: ", obj->tp->tp, obj->gcObj->rc);
-    (*obj->tp->printer)(obj);
-    puts("");
+    // printf("InitFree tp = %d rc = %d: ", obj->tp->tp, obj->gcObj->rc);
+    // (*obj->tp->printer)(obj);
+    // puts("");
     if (obj->gcObj->rc <= 0) {
-      printf("Free tp = %d: ", obj->tp->tp);
-      (*obj->tp->printer)(obj);
-      puts("");
+      // printf("Free tp = %d: ", obj->tp->tp);
+      // (*obj->tp->printer)(obj);
+      // puts("");
+      (*obj->tp->destructor)(obj->gcObj->obj);
+      free(obj->gcObj);
+      obj->gcObj = NULL;
+    }
+  }
+}
+
+void Object_free_nontop(Object *obj) {
+  if (obj->tp->need_gc && obj->gcObj) {
+    if (obj->gcObj->rc <= 0) {
       (*obj->tp->destructor)(obj->gcObj->obj);
       free(obj->gcObj);
       obj->gcObj = NULL;

@@ -36,8 +36,11 @@ void *List_copy(void *base) {
 }
 
 void List_free(void *list) {
+  // printf("free");
+  // listObj_print(Object_gc(&list, GC_Object_init(list)));
+  // puts("");
   for (size_t i = 0; i < ((List *)list)->size; i++) {
-    Object_free(&((List *)list)->val[i]);
+    Object_free_nontop(&((List *)list)->val[i]);
   }
   free(((List *)list)->val);
   free(list);

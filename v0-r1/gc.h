@@ -57,5 +57,6 @@ Object Object_gc(ObjTrait *trait, GC_Object *gcObj);
 void Object_free(Object *obj);
 Object Object_pass(Object *base, size_t rc_offset);
 Object Object_copy(Object *base);
+void Object_free_nontop(Object *obj);
 
 #endif // GC_H
