@@ -4,7 +4,7 @@ func main(name) {
 
 func fac(num) {
     # Print("fac", num, "\n");
-    if (num == 0) {
+    if num == 0 {
         return 1;
     }
     return num * fac(num - 1);
@@ -29,6 +29,20 @@ func test_list2() {
     # Print("Rc: ", GetRc(list[2]), "\n");
 }
 
+func prime(num) {
+    if num < 2 { return 0; }
+    var i = 2;
+    while i < num {
+        # Print(num, " ", i, "\n");
+        if num % i == 0 {
+            # Print(i, "\n");
+            return 0;
+        }
+        i = i + 1;
+    }
+    return 1;
+}
+
 main("world");
 main("betterlang");
 Print(fac(10), "\n");
@@ -36,3 +50,6 @@ Print(1 + 2 * 3, "\n");
 Print((1 + 2) * 3, "\n");
 test_list();
 test_list2();
+Print(prime(1), "\n");
+Print(prime(17), "\n");
+Print(prime(10), "\n");

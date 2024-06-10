@@ -340,14 +340,13 @@ RunSignal Stmt_run(Stmt *stmt, Scope *scope) {
   case WHILE_AST: {
     Scope *new_scope = Scope_new(scope);
     Object cond = Expr_eval(stmt->while_ast.cond, scope);
-    RunSignal res;
+    RunSignal res = RunSignal_new(NONE_SIGNAL, Object_int(0));
     while ((*cond.tp->toBooler)(&cond)) {
       RunSignal signal = Stmt_run(stmt->while_ast.body, new_scope);
       if (signal.signal == RETURN_SIGNAL) {
         res = signal;
         break;
       } else if (signal.signal == BREAK_SIGNAL) {
-        res = RunSignal_new(NONE_SIGNAL, Object_int(0));
         break;
       }
       Object_free(&cond);
@@ -355,6 +354,7 @@ RunSignal Stmt_run(Stmt *stmt, Scope *scope) {
     }
     Object_free(&cond);
     Scope_free(new_scope);
+    return res;
   }
   case RETURN_AST: {
     Object ret_val = Expr_eval(stmt->expr_ast, scope);
