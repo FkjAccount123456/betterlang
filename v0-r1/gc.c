@@ -125,10 +125,9 @@ Object Object_binary(TokenType op, Object *left, Object *right) {
       return Object_int(strcmp(l->val, r->val) <= 0);
     default:;
     }
-  } else {
-    printf("Unsupported binary operation.");
-    exit(-1);
   }
+  printf("Unsupported binary operation.");
+  exit(-1);
 }
 
 Object Object_unary(TokenType op, Object *right) {
