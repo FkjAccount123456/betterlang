@@ -30,7 +30,8 @@ void run_file(char *filename) {
   String *code = read_file(filename);
   Lexer *lexer = Lexer_new(code->val);
   Stmt *program = Parser_program(lexer);
-  Stmt_run(program, scope);
+  Stmt_run(program, scope);\
+  Stmt_free(program);
   String_free(code);
 }
 

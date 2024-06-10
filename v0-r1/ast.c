@@ -115,56 +115,6 @@ void Stmt_free(Stmt *stmt) {
   free(stmt);
 }
 
-long long _binary_operate(TokenType op, long long left, long long right) {
-  switch (op) {
-  case ADD_TOKEN:
-    return left + right;
-  case SUB_TOKEN:
-    return left - right;
-  case MUL_TOKEN:
-    return left * right;
-  case DIV_TOKEN:
-    return left / right;
-  case MOD_TOKEN:
-    return left % right;
-  case EQ_TOKEN:
-    return left == right;
-  case NE_TOKEN:
-    return left != right;
-  case GT_TOKEN:
-    return left > right;
-  case GE_TOKEN:
-    return left >= right;
-  case LT_TOKEN:
-    return left < right;
-  case LE_TOKEN:
-    return left <= right;
-  case AND_TOKEN:
-    return left && right;
-  case OR_TOKEN:
-    return left || right;
-  case XOR_TOKEN:
-    return left ^ right;
-  default:
-    printf("Unknown binary operator.");
-    exit(-1);
-  }
-}
-
-long long _unary_operate(TokenType op, long long val) {
-  switch (op) {
-  case ADD_TOKEN:
-    return +val;
-  case SUB_TOKEN:
-    return -val;
-  case NOT_TOKEN:
-    return !val;
-  default:
-    printf("Unknown unary operator.");
-    exit(-1);
-  }
-}
-
 Object Expr_eval(Expr *expr, Scope *scope) {
   // printf("Expr_eval: %d\n", expr->type);
   switch (expr->type) {
@@ -187,8 +137,7 @@ Object Expr_eval(Expr *expr, Scope *scope) {
       printf("Expect two integers.");
       exit(-1);
     }
-    Object res = Object_int(
-        _binary_operate(expr->binary_ast.op, left.intObj, right.intObj));
+    Object res = Object_binary(expr->binary_ast.op, &left, &right);
     Object_free(&left);
     Object_free(&right);
     return res;
@@ -199,7 +148,7 @@ Object Expr_eval(Expr *expr, Scope *scope) {
       printf("Expect an integer.");
       exit(-1);
     }
-    Object res = Object_int(_unary_operate(expr->unary_ast.op, val.intObj));
+    Object res = Object_unary(expr->unary_ast.op, &val);
     Object_free(&val);
     return res;
   }

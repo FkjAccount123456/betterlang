@@ -2,6 +2,7 @@
 #define GC_H
 
 #include "includes.h"
+#include "b_lexer.h"
 
 typedef struct Object Object;
 
@@ -12,6 +13,7 @@ typedef void *(*Copier)(void *);
 typedef void *(*Passer)(void *, size_t);
 typedef bool (*ToBooler)(Object *);
 typedef void (*Printer)(Object *);
+typedef size_t (*LenFn)(Object *);
 
 typedef enum ObjType {
   INT_OBJ,
@@ -30,6 +32,7 @@ typedef struct ObjTrait {
   Passer passer;
   ToBooler toBooler;
   Printer printer;
+  LenFn lenFn;
 } ObjTrait;
 
 extern ObjTrait intTrait, strTrait, listTrait, dictTrait, funcTrait, builtinfuncTrait;
@@ -58,5 +61,7 @@ void Object_free(Object *obj);
 Object Object_pass(Object *base, size_t rc_offset);
 Object Object_copy(Object *base);
 void Object_free_nontop(Object *obj);
+Object Object_binary(TokenType op, Object *left, Object *right);
+Object Object_unary(TokenType op, Object *right);
 
 #endif // GC_H

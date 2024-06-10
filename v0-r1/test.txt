@@ -27,6 +27,7 @@ func test_list2() {
     Print(list[2], "\n");
     Print(list, " ", list[2][0], "\n");
     # Print("Rc: ", GetRc(list[2]), "\n");
+    Print(list, " len: ", Len(list), "\n");
 }
 
 func prime(num) {
@@ -70,6 +71,14 @@ func test_counter() {
     }
 }
 
+func test_Append() {
+    var list = [];
+    while Len(list) <= 10 {
+        Print(list, "\n");
+        Append(list, Len(list) + 1);
+    }
+}
+
 main("world");
 main("betterlang");
 Print(fac(10), "\n");
@@ -82,3 +91,4 @@ Print(prime(17), "\n");
 Print(prime(10), "\n");
 test_loop();
 test_counter();
+test_Append();

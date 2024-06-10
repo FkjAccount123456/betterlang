@@ -40,11 +40,115 @@ void err_print(Object *obj) {
   exit(-1);
 }
 
+size_t strObj_len(Object *obj) { return ((String *)obj->gcObj->obj)->size; }
+
+size_t listObj_len(Object *obj) { return ((List *)obj->gcObj->obj)->size; }
+
+size_t dictObj_len(Object *obj) { return Dict_size(obj->gcObj->obj); }
+
+size_t err_len(Object *obj) {
+  printf("Failed to get length of object.");
+  exit(-1);
+}
+
+long long _binary_operate(TokenType op, long long left, long long right) {
+  switch (op) {
+  case ADD_TOKEN:
+    return left + right;
+  case SUB_TOKEN:
+    return left - right;
+  case MUL_TOKEN:
+    return left * right;
+  case DIV_TOKEN:
+    return left / right;
+  case MOD_TOKEN:
+    return left % right;
+  case EQ_TOKEN:
+    return left == right;
+  case NE_TOKEN:
+    return left != right;
+  case GT_TOKEN:
+    return left > right;
+  case GE_TOKEN:
+    return left >= right;
+  case LT_TOKEN:
+    return left < right;
+  case LE_TOKEN:
+    return left <= right;
+  default:
+    printf("Unknown binary operator.");
+    exit(-1);
+  }
+}
+
+long long _unary_operate(TokenType op, long long val) {
+  switch (op) {
+  case ADD_TOKEN:
+    return +val;
+  case SUB_TOKEN:
+    return -val;
+  default:
+    printf("Unknown unary operator.");
+    exit(-1);
+  }
+}
+
+Object Object_binary(TokenType op, Object *left, Object *right) {
+  if (op == AND_TOKEN)
+    return Object_int((*left->tp->toBooler)(left) && (*right->tp->toBooler)(right));
+  if (op == OR_TOKEN)
+    return Object_int((*left->tp->toBooler)(left) || (*right->tp->toBooler)(right));
+  if (op == XOR_TOKEN)
+    return Object_int((*left->tp->toBooler)(left) ^ (*right->tp->toBooler)(right));
+  if (op == EQ_TOKEN && left->tp->tp != right->tp->tp)
+    return Object_int(0);
+  if (op == NE_TOKEN && left->tp->tp != right->tp->tp)
+    return Object_int(1);
+  if (left->tp->tp == INT_OBJ && right->tp->tp == INT_OBJ) {
+    long long res = _binary_operate(op, left->intObj, right->intObj);
+    return Object_int(res);
+  } else if (left->tp->tp == STR_OBJ && right->tp->tp == STR_OBJ) {
+    String *l = left->gcObj->obj;
+    String *r = right->gcObj->obj;
+    switch (op) {
+    case EQ_TOKEN:
+      return Object_int(strcmp(l->val, r->val) == 0);
+    case NE_TOKEN:
+      return Object_int(strcmp(l->val, r->val) != 0);
+    case GT_TOKEN:
+      return Object_int(strcmp(l->val, r->val) > 0);
+    case GE_TOKEN:
+      return Object_int(strcmp(l->val, r->val) >= 0);
+    case LT_TOKEN:
+      return Object_int(strcmp(l->val, r->val) < 0);
+    case LE_TOKEN:
+      return Object_int(strcmp(l->val, r->val) <= 0);
+    default:;
+    }
+  } else {
+    printf("Unsupported binary operation.");
+    exit(-1);
+  }
+}
+
+Object Object_unary(TokenType op, Object *right) {
+  if (op == NOT_TOKEN)
+    return Object_int(!(*right->tp->toBooler)(right));
+  if (right->tp->tp == INT_OBJ) {
+    long long res = _unary_operate(op, right->intObj);
+    return Object_int(res);
+  } else {
+    printf("Unsupported unary operation.");
+    exit(-1);
+  }
+}
+
 void ObjTrait_init() {
   intTrait.need_gc = false;
   intTrait.tp = INT_OBJ;
   intTrait.toBooler = intObj_toBool;
   intTrait.printer = intObj_print;
+  intTrait.lenFn = err_len;
 
   strTrait.need_gc = true;
   strTrait.tp = STR_OBJ;
@@ -53,6 +157,7 @@ void ObjTrait_init() {
   strTrait.passer = NULL;
   strTrait.toBooler = strObj_toBool;
   strTrait.printer = strObj_print;
+  strTrait.lenFn = strObj_len;
 
   listTrait.need_gc = true;
   listTrait.tp = LIST_OBJ;
@@ -61,6 +166,7 @@ void ObjTrait_init() {
   listTrait.passer = List_pass;
   listTrait.toBooler = listObj_toBool;
   listTrait.printer = listObj_print;
+  listTrait.lenFn = listObj_len;
 
   dictTrait.need_gc = true;
   dictTrait.tp = DICT_OBJ;
@@ -69,6 +175,7 @@ void ObjTrait_init() {
   dictTrait.passer = Dict_pass;
   dictTrait.toBooler = dictObj_toBool;
   dictTrait.printer = err_print;
+  dictTrait.lenFn = dictObj_len;
 
   funcTrait.need_gc = true;
   funcTrait.tp = FUNC_OBJ;
@@ -77,11 +184,13 @@ void ObjTrait_init() {
   funcTrait.passer = Func_pass;
   funcTrait.toBooler = funcObj_toBool;
   funcTrait.printer = err_print;
+  funcTrait.lenFn = err_len;
 
   builtinfuncTrait.need_gc = false;
   builtinfuncTrait.tp = BUILTINFUNC_OBJ;
   builtinfuncTrait.toBooler = funcObj_toBool;
   builtinfuncTrait.printer = err_print;
+  builtinfuncTrait.lenFn = err_len;
 }
 
 GC_Object *GC_Object_init(void *obj) {

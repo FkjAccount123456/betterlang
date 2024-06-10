@@ -1,5 +1,5 @@
 OBJS = gc.o b_list.o b_string.o b_dict.o b_lexer.o ast.o b_parse.o b_func.o b_scope.o b_std.o
-TGT = program30
+TGT = program31
 
 run: build
 	$(TGT)
