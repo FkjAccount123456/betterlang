@@ -43,6 +43,33 @@ func prime(num) {
     return 1;
 }
 
+func test_loop() {
+    var i = 0;
+    while 1 {
+        i = i + 1;
+        if i > 10 { break; }
+        if i == 5 { continue; }
+        Print(i, "\n");
+    }
+}
+
+func Counter(start) {
+    func next() {
+        start = start + 1;
+        return start;
+    }
+    return next;
+}
+
+func test_counter() {
+    var counter = Counter(0);
+    var i = counter();
+    while i <= 10 {
+        Print(i, "\n");
+        i = counter();
+    }
+}
+
 main("world");
 main("betterlang");
 Print(fac(10), "\n");
@@ -53,3 +80,5 @@ test_list2();
 Print(prime(1), "\n");
 Print(prime(17), "\n");
 Print(prime(10), "\n");
+test_loop();
+test_counter();
