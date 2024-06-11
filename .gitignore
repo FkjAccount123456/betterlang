@@ -6,4 +6,5 @@
 *.sln
 *.vcxproj*
 .*
-.root/v
+.root/
+v0/
