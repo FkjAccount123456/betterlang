@@ -3,6 +3,7 @@
 
 # 编译运行这个项目
 ```bash
+cd v0-r1/
 编译：make build
 运行：make run
 ```
@@ -21,7 +22,7 @@
 
 ## Hello, world!
 ```
-Print("Hello, world!\n"); // Hello, world!
+Print("Hello, world!\n"); # Hello, world!
 ```
 
 ## 函数定义与调用
@@ -29,8 +30,8 @@ Print("Hello, world!\n"); // Hello, world!
 func sayHello(name) {
     Print("Hello, ", name, "!\n");
 }
-sayHello("world"); // Hello, world!
-sayHello("betterlang"); // Hello, betterlang!
+sayHello("world"); # Hello, world!
+sayHello("betterlang"); # Hello, betterlang!
 ```
 
 ## 递归
@@ -42,7 +43,7 @@ func fac(num) {
         return num * fac(num - 1);
     }
 }
-Print(fac(5)); // 120
+Print(fac(5)); # 120
 ```
 
 ## 列表
@@ -65,7 +66,7 @@ func Counter(start) {
 }
 
 var counter = Counter(0);
-Print(counter()); // 1
-Print(counter()); // 2
-Print(counter()); // 3
+Print(counter()); # 1
+Print(counter()); # 2
+Print(counter()); # 3
 ```
