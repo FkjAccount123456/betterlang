@@ -1,13 +1,10 @@
-objs = b_gc.o b_obj.o
+objs = b_gc.c b_obj.c
 
 run: build
 	./main.exe
 
 build: $(objs)
-	gcc $(objs) main.c -o main.exe
-
-%.o: %.c
-	gcc -c $< -o $@
+	gcc -g $(objs) main.c -o main.exe
 
 clean:
 	-del *.exe *.o *~

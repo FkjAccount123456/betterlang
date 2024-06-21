@@ -43,12 +43,19 @@ void test_dict() {
   GC_Root gc = GC_new();
   printf("Root: %llx\n", gc.gc_rootnode);
   Object dict = Object_gc(DICT_OBJ, Dict_new(&gc), gc.gc_rootnode);
+  Dict_insert(ObjPtr(dict), "abc", Object_int(10), &gc);
+  Dict_insert(ObjPtr(dict), "abd", Object_int(20), &gc);
+  Dict_insert(ObjPtr(dict), "acc", Object_int(30), &gc);
+  printf("abc: %lld\n", Dict_find(ObjPtr(dict), "abc")->int_obj);
+  printf("abd: %lld\n", Dict_find(ObjPtr(dict), "abd")->int_obj);
+  printf("acc: %lld\n", Dict_find(ObjPtr(dict), "acc")->int_obj);
   Object_free(dict);
   GC_collect(&gc);
 }
 
 int main(int argc, char *argv[]) {
-  test_obj();
-  test_list();
+  // test_obj();
+  // test_list();
+  test_dict();
   return 0;
 }

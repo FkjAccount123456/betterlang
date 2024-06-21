@@ -82,28 +82,38 @@ void String_cat(String *base, String *other, GC_Root *gc) {
 GC_Node *Dict_new(GC_Root *gc) {
   GC_Node *n = GC_malloc(sizeof(Dict), gc);
   Dict *dict = n->ptr;
-  dict->obj = NULL;
+  dict->obj = Object_int(0);
+  dict->has_obj = false;
   dict->children = GC_malloc(sizeof(GC_Node *) * 128, gc);
-  for (size_t i = 0; i < 128; i++)
-    ((Dict **)dict->children->ptr)[i] = NULL;
+  GC_Node_connect(n, dict->children);
+  memset(dict->children->ptr, 0, sizeof(GC_Node *) * 128);
+  // printf("Dict_new n: %llx, ptr: %llx\n", n, n->ptr);
   return n;
 }
 
 void Dict_insert(Dict *dict, char *key, Object obj, GC_Root *gc) {
+  // printf("Dict_insert %s\n", key);
   if (!*key) {
-    if (dict->obj)
-      Object_free(*dict->obj);
-    *dict->obj = obj;
+    // printf("has_obj: %d\n", dict->has_obj);
+    if (dict->has_obj)
+      Object_free(dict->obj);
+    dict->obj = obj;
+    dict->has_obj = true;
+    return;
   }
   if (((GC_Node **)dict->children->ptr)[*key] == NULL) {
     ((GC_Node **)dict->children->ptr)[*key] = Dict_new(gc);
+    // printf("dictchild: %llx\n", ((GC_Node **)dict->children->ptr)[*key]);
   }
-  Dict_insert(((Dict **)dict->children->ptr)[*key], key + 1, obj, gc);
+  Dict_insert(((GC_Node **)dict->children->ptr)[*key]->ptr, key + 1, obj, gc);
 }
 
 Object *Dict_find(Dict *dict, char *key) {
   if (!*key) {
-    return dict->obj;
+    if (dict->has_obj)
+      return &dict->obj;
+    else
+      return NULL;
   }
   if (((GC_Node **)dict->children->ptr)[*key] == NULL) {
     return NULL;

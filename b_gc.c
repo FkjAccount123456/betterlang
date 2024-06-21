@@ -38,7 +38,7 @@ void GC_NodeList_remove_first(GC_NodeList **nl) {
 
 GC_Node *GC_Node_new(void *ptr, GC_Root *gc) {
   GC_Node *n = malloc(sizeof(GC_Node));
-  n->cnt = 1;
+  n->cnt = 0;
   n->children = NULL;
   n->ptr = ptr;
   n->parent = NULL;
@@ -71,7 +71,6 @@ void GC_Node_connect(GC_Node *base, GC_Node *tgt) {
 void GC_Node_dennect(GC_Node *base, GC_Node *tgt) {
   // printf("GC_Node_dennect %llx %llx %llu\n", base, tgt, tgt->cnt);
   assert(tgt);
-  tgt->cnt--;
   if (tgt->cnt > 0)
     return;
   tgt->parent = NULL;

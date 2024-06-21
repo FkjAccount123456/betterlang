@@ -41,7 +41,8 @@ void String_append(String *base, char ch, GC_Root *gc);
 void String_cat(String *base, String *other, GC_Root *gc);
 
 typedef struct Dict {
-  Object *obj;
+  Object obj;
+  bool has_obj;
   GC_Node *children;
 } Dict;
 
