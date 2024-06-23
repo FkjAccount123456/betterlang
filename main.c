@@ -1,9 +1,5 @@
 #include "b_obj.h"
 
-#define ObjPtr(obj) (obj.gc_obj->ptr)
-#define ObjTypePtr(type, obj) ((type *)obj.gc_obj->ptr)
-#define NodeTypePtr(type, node) ((type *)node->ptr)
-
 void test_obj() {
   GC_Root gc = GC_new();
   printf("Root: %llx\n", gc.gc_rootnode);

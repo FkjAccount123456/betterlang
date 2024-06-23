@@ -1,5 +1,5 @@
-#ifndef B_INCLUDES_H
-#define B_INCLUDES_H
+#ifndef INCLUDES_H
+#define INCLUDES_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,4 +8,4 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#endif // B_INCLUDES_H
+#endif // INCLUDES_H

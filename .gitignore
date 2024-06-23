@@ -4,3 +4,8 @@
 *.exe
 feelings.txt
 .*/
+old-gc/
+.cproject
+.project
+.settings/
+Debug/
