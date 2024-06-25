@@ -2,6 +2,7 @@
 *~
 *.o
 *.exe
+*.swp
 feelings.txt
 .*/
 old-gc/
