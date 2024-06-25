@@ -1,7 +1,7 @@
 #ifndef LEX_H
 #define LEX_H
 
-#include "b_obj.h"
+#include "obj.h"
 
 typedef enum TokenType {
   INT_TOKEN,
@@ -55,15 +55,15 @@ typedef struct Token {
   union {
     long long int_token;
     double float_token;
-    GC_Node *str_token;
+    String *str_token;
   };
 } Token;
 
 Token Token_new(TokenType tp);
 Token Token_int(long long int_token);
 Token Token_float(double float_token);
-Token Token_id(GC_Node *str);
-Token Token_str(GC_Node *str);
+Token Token_id(String *str);
+Token Token_str(String *str);
 
 typedef struct TokenList {
   Token *tokens;
@@ -82,6 +82,6 @@ typedef struct EscapeRes {
 } EscapeRes;
 
 EscapeRes _tokenize_escape(char *cur);
-TokenList *tokenize(char *code, GC_Root *gc);
+TokenList *tokenize(char *code);
 
 #endif // LEX_H

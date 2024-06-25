@@ -7,5 +7,6 @@
 #include <ctype.h>
 #include <assert.h>
 #include <stdbool.h>
+#include "seq.h"
 
 #endif // INCLUDES_H

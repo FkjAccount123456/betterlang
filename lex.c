@@ -1,4 +1,4 @@
-#include "b_lex.h"
+#include "lex.h"
 
 Token Token_new(TokenType tp) {
   Token token;
@@ -18,13 +18,13 @@ Token Token_float(double float_token) {
   return token;
 }
 
-Token Token_id(GC_Node *str) {
+Token Token_id(String *str) {
   Token token = Token_new(ID_TOKEN);
   token.str_token = str;
   return token;
 }
 
-Token Token_str(GC_Node *str) {
+Token Token_str(String *str) {
   Token token = Token_new(STR_TOKEN);
   token.str_token = str;
   return token;
@@ -103,9 +103,9 @@ EscapeRes _tokenize_escape(char *cur) {
       }
       if ('0' <= res && res <= '9') {
         res += *cur - '0';
-      } else if ('a' <= res <= 'f') {
+      } else if ('a' <= res && res <= 'f') {
         res += *cur - 'a' + 10;
-      } else if ('A' <= res <= 'F') {
+      } else if ('A' <= res && res <= 'F') {
         res += *cur - 'A' + 10;
       } else {
         printf("Wrong escape sequence.");
@@ -122,7 +122,7 @@ EscapeRes _tokenize_escape(char *cur) {
   return res_data;
 }
 
-TokenList *tokenize(char *code, GC_Root *gc) {
+TokenList *tokenize(char *code) {
   char *cur = code;
   TokenList *res = TokenList_new();
 
@@ -155,11 +155,11 @@ TokenList *tokenize(char *code, GC_Root *gc) {
       } else
         TokenList_append(res, Token_int(base_num));
     } else if (isalpha(*cur) || *cur == '_') {
-      GC_Node *id = String_new("", gc);
+      String *id = _String_new("");
       while (*cur && (isalnum(*cur) || *cur == '_')) {
-        String_append(id->ptr, *cur++, gc);
+        String_append(id, *cur++);
       }
-      char *iv = ((String *)id->ptr)->val->ptr;
+      char *iv = id->val;
       if (!strcmp(iv, "if"))
         TokenList_append(res, Token_new(IF_TOKEN));
       else if (!strcmp(iv, "else"))
@@ -192,15 +192,15 @@ TokenList *tokenize(char *code, GC_Root *gc) {
         TokenList_append(res, Token_id(id));
     } else if (*cur == '"') {
       cur++;
-      GC_Node *str = String_new("", gc);
+      String *str = _String_new("");
       while (*cur && *cur != '"') {
         if (*cur == '\\') {
           cur++;
           EscapeRes data = _tokenize_escape(cur);
           cur = data.cur;
-          String_append(str->ptr, data.res, gc);
+          String_append(str, data.res);
         } else {
-          String_append(str->ptr, *cur++, gc);
+          String_append(str, *cur++);
         }
       }
       if (!*cur) {

@@ -1,11 +1,5 @@
 #include "gc.h"
 
-GCTrait str_trait, list_obj, dict_obj;
-
-void GCTraits_init() {
-  // TODO
-}
-
 GCList *GCList_copy(GCList *l) {
   GCList *res = NULL;
   for (GCList *cur = l; cur; cur = cur->next) {
@@ -49,6 +43,7 @@ GCLeaf *GCLeaf_new(GCTrait *trait, void *ptr) {
   l->trait = trait;
   l->ptr = ptr;
   l->flag = false;
+  GC_add_ptr(l);
   return l;
 }
 
@@ -61,16 +56,25 @@ GCPtr *GCPtr_new(GCLeaf *ptr) {
   GCPtr *res = malloc(sizeof(GCPtr));
   res->ptr = ptr;
   res->chs = NULL;
+  res->fas = NULL;
   return res;
 }
 
 void GCPtr_free(GCPtr *ptr) {
+  for (GCList *cur = ptr->chs; cur; cur = cur->next) {
+    GCPtr_remfa(cur->cur, ptr);
+  }
+  for (GCList *cur = ptr->fas; cur; cur = cur->next) {
+    GCPtr_remch(cur->cur, ptr);
+  }
   GCList_free(ptr->chs);
+  GCList_free(ptr->fas);
   free(ptr);
 }
 
 void GCPtr_addch(GCPtr *base, GCPtr *ch) {
   GCList_append(&base->chs, ch);
+  GCList_append(&ch->fas, base);
 }
 
 void GCPtr_remch(GCPtr *base, GCPtr *ch) {
@@ -86,11 +90,28 @@ void GCPtr_remch(GCPtr *base, GCPtr *ch) {
   }
 }
 
+void GCPtr_remfa(GCPtr *ch, GCPtr *base) {
+  if (ch->fas->cur == base)
+    GCList_removefirst(&ch->fas);
+  else {
+    for (GCList *cur = ch->fas; cur->next; cur = cur->next) {
+      if (cur->next->cur == base) {
+        GCList_removenext(cur);
+        return;
+      }
+    }
+  }
+}
+
 GCPtr *GCPtr_pass(GCPtr *ptr) {
   GCPtr *res = malloc(sizeof(GCPtr));
   res->ptr = ptr->ptr;
   res->chs = GCList_copy(ptr->chs);
   return res;
+}
+
+GCPtr *GCPtr_copy(GCPtr *ptr) {
+  return ptr->ptr->trait->copier(ptr->ptr);
 }
 
 GCRoot gc;
@@ -128,4 +149,17 @@ void GC_collect() {
       gc.ptrs[i]->flag = false;
     }
   }
+}
+
+GCLeaf *GC_malloc(size_t size) {
+  GCLeaf *res = malloc(sizeof(GCLeaf));
+  res->trait = NULL;
+  res->ptr = malloc(size);
+  res->flag = false;
+  GC_add_ptr(res);
+  return res;
+} 
+
+void GC_realloc(GCLeaf *ptr, size_t size) {
+  ptr->ptr = realloc(ptr->ptr, size);
 }

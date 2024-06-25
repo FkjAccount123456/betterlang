@@ -5,16 +5,19 @@
 
 typedef struct GCPtr GCPtr;
 
-typedef void *(*Copier)(void *);
+typedef GCPtr *(*Copier)(void *);
 typedef void (*Dstcor)(void *);
 
 typedef enum ObjType {
   INT_OBJ,
   FLOAT_OBJ,
+  BUILTIN_OBJ,
   NULL_OBJ,
   STR_OBJ,
   LIST_OBJ,
   DICT_OBJ,
+  VMFRAME_OBJ,
+  FUNC_OBJ,
 } ObjType;
 
 typedef struct GCTrait {
@@ -23,7 +26,6 @@ typedef struct GCTrait {
   Dstcor dstcor;
 } GCTrait;
 
-extern GCTrait str_trait, list_obj, dict_obj;
 void GCTraits_init();
 
 typedef struct GCList {
@@ -49,13 +51,16 @@ void GCLeaf_free(GCLeaf *l);
 typedef struct GCPtr {
   GCLeaf *ptr;
   GCList *chs;
+  GCList *fas;
 } GCPtr;
 
 GCPtr *GCPtr_new(GCLeaf *ptr);
 void GCPtr_free(GCPtr *ptr);
 void GCPtr_addch(GCPtr *base, GCPtr *ch);
 void GCPtr_remch(GCPtr *base, GCPtr *ch);
+void GCPtr_remfa(GCPtr *ch, GCPtr *base);
 GCPtr *GCPtr_pass(GCPtr *ptr);
+GCPtr *GCPtr_copy(GCPtr *ptr);
 
 typedef struct GCRoot {
   size_t cnt, max;
@@ -68,5 +73,8 @@ void GCRoot_init();
 void GC_add_ptr(GCLeaf *ptr);
 void GC_recursive(GCPtr *cur);
 void GC_collect();
+
+GCLeaf *GC_malloc(size_t size);
+void GC_realloc(GCLeaf *ptr, size_t size);
 
 #endif // GC_H
