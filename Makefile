@@ -1,4 +1,4 @@
-objs = b_gc.c b_obj.c b_lex.c
+objs = 
 
 run: build
 	./main.exe
