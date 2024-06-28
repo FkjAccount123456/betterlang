@@ -1,12 +1,75 @@
 #include "obj.h"
 
+ObjectTrait none_trait, int_trait, float_trait, str_trait, list_trait, dict_trait;
+
+void ObjectTrait_init() {
+  none_trait.tp = NONE_OBJ;
+  none_trait.dstcor = NULL;
+
+  int_trait.tp = INT_OBJ;
+  int_trait.dstcor = NULL;
+
+  float_trait.tp = FLOAT_OBJ;
+  float_trait.dstcor = NULL;
+
+  str_trait.tp = STR_OBJ;
+  str_trait.dstcor = (GC_Dstcor)String_free;
+
+  list_trait.tp = LIST_OBJ;
+  list_trait.dstcor = (GC_Dstcor)List_free;
+  
+  dict_trait.tp = DICT_OBJ;
+  dict_trait.dstcor = (GC_Dstcor)Dict_free;
+}
+
+Object Object_none() {
+  Object obj;
+  obj.tp = &none_trait;
+  return obj;
+}
+
+Object Object_int(long long i) {
+  Object obj;
+  obj.tp = &int_trait;
+  obj.i = i;
+  return obj;
+}
+
+Object Object_float(double f) {
+  Object obj;
+  obj.tp = &float_trait;
+  obj.f = f;
+  return obj;
+}
+
+Object Object_String(String *s) {
+  Object obj;
+  obj.tp = &str_trait;
+  obj.s = s;
+  return obj;
+}
+
+Object Object_List(List *l) {
+  Object obj;
+  obj.tp = &list_trait;
+  obj.l = l;
+  return obj;
+}
+
+Object Object_Dict(Dict *d) {
+  Object obj;
+  obj.tp = &dict_trait;
+  obj.d = d;
+  return obj;
+}
+
 size_t Object_get_gcval(Object obj) {
   switch (obj.tp->tp) {
     case INT_OBJ:
     case FLOAT_OBJ:
     case NONE_OBJ:
       return 0;
-    case STRING_OBJ:
+    case STR_OBJ:
       return obj.s->gc_base;
     case LIST_OBJ:
       return obj.l->gc_base;
@@ -74,6 +137,7 @@ void List_append(List *list, Object obj) {
 }
 
 void List_free(List *list) {
+  puts("List_free");
   free(list->items);
   free(list);
 }
@@ -143,6 +207,7 @@ void Dict_insert(Dict *dict, char *key, Object obj) {
 }
 
 void Dict_free(Dict *dict) {
+  puts("Dict_free");
   _Dict_free(dict->val);
   free(dict);
 }

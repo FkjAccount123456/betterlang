@@ -7,7 +7,7 @@ typedef enum ObjectType {
   INT_OBJ,
   FLOAT_OBJ,
   NONE_OBJ,
-  STRING_OBJ,
+  STR_OBJ,
   LIST_OBJ,
   DICT_OBJ,
 } ObjectType;
@@ -21,6 +21,10 @@ typedef struct ObjectTrait {
   GC_Dstcor dstcor;
 } ObjectTrait;
 
+extern ObjectTrait none_trait, int_trait, float_trait, str_trait, list_trait, dict_trait;
+
+void ObjectTrait_init();
+
 typedef struct Object {
   ObjectTrait *tp;
   union {
@@ -31,6 +35,13 @@ typedef struct Object {
     Dict *d;
   };
 } Object;
+
+Object Object_none();
+Object Object_int(long long i);
+Object Object_float(double f);
+Object Object_String(String *s);
+Object Object_List(List *l);
+Object Object_Dict(Dict *d);
 
 size_t Object_get_gcval(Object obj);
 

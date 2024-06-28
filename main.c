@@ -31,6 +31,33 @@ void test_String() {
   GC_collect();
 }
 
+void test_List() {
+  List *list = List_new();
+  GC_active_add(list->gc_base);
+  for (long long i = 0; i < 10; i++) {
+    List_append(list, Object_int(i));
+    for (size_t j = 0; j < list->size; j++)
+      printf("%lld ", list->items[j].i);
+    puts("");
+  }
+  GC_active_remove(list->gc_base);
+  GC_collect();
+}
+
+void test_Dict() {
+  Dict *dict = Dict_new();
+  GC_active_add(dict->gc_base);
+  Dict_insert(dict, "abc", Object_int(1));
+  Dict_insert(dict, "abd", Object_int(2));
+  Dict_insert(dict, "acd", Object_int(3));
+  printf("abc: %lld, abd: %lld, acd: %lld\n",
+         Dict_find(dict, "abc")->i,
+         Dict_find(dict, "abd")->i,
+         Dict_find(dict, "acd")->i);
+  GC_active_remove(dict->gc_base);
+  GC_collect();
+}
+
 void quit() {
   GC_quit();
 }
@@ -38,6 +65,8 @@ void quit() {
 int main(int argc, char **argv) {
   init();
   test_String();
+  test_List();
+  test_Dict();
   quit();
   return 0;
 }
