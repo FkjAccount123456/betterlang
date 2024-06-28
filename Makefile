@@ -1,4 +1,4 @@
-objs = 
+objs = gc.c obj.c
 
 run: build
 	./main.exe
