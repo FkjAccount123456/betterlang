@@ -189,6 +189,32 @@ void Parser_stmt(Parser *p) {
     SizeList_append(p->while_jmpends, 0);
     SizeList_append(p->while_beginposs, p->size - 1);
     Parser_expr(p);
+    Parser_add_output(p, VMCode_new(JNZ));
+    SizeList_append(p->while_jmpends, p->size - 1);
+    Parser_block(p);
+    Parser_add_output(p, VMCode_new(JMP));
+    p->output[p->size - 1].l =
+      p->while_beginposs->items[p->while_beginposs->size - 1];
+    while (p->while_jmpends->size) {
+      p->while_beginposs->size--;
+      if (p->while_jmpends->items[p->while_beginposs->size] == 0) {
+        break;
+      }
+      p->output[p->while_beginposs->size].l = p->size - 1;
+    }
+    p->while_beginposs->size--;
+  } else if (p->cur->tp == BREAK_TOKEN) {
+    Parser_next(p);
+    Parser_add_output(p, VMCode_new(JMP));
+    p->output[p->size - 1].l = p->while_beginposs->items[p->while_beginposs->size - 1];
+  } else if (p->cur->tp == CONTINUE_TOKEN) {
+    Parser_next(p);
+    Parser_add_output(p, VMCode_new(JMP));
+    SizeList_append(p->while_jmpends, p->size - 1);
+  } else if (p->cur->tp == RETURN_TOKEN) {
+    Parser_next(p);
+    Parser_expr(p);
+    Parser_add_output(p, VMCode_new(RET));
   } else {
   }
 }
