@@ -1,4 +1,4 @@
-objs = gc.c obj.c
+objs = gc.c obj.c lex.c
 
 run: build
 	./main.exe

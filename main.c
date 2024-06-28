@@ -2,6 +2,7 @@
 
 void init() {
   GC_init();
+  ObjectTrait_init();
 }
 
 void test_String() {

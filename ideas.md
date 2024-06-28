@@ -6,3 +6,41 @@
 燃烧内存吧！！！
 # 2024-6-27
 （GC v3）注意传递对象的时候可以在外部新建一个一样的对象并建立双向引用
+# 2024-6-28
+if-else if-else的编译
+```
+if      cond1 { body1 }
+else if cond2 { body2 }
+else          { body3 }
+
+cond1
+jnz pos1
+body1
+jmp endpos
+pos1:
+cond2
+jnz pos2
+body2
+jmp endpos
+pos2:
+body3
+endpos:
+```
+while的编译
+```
+while cond {
+    break;
+    continue;
+}
+begin:
+cond
+jnz end
+jmp end
+jmp begin
+jmp begin
+end:
+```
+begin用一个stack存
+end和if的endpos存储差不多，但是为了区分多个while必须在stack之中加上NULL
+、、、，这些都得存Parser里，还得再写个SizeList
+

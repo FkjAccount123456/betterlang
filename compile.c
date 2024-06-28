@@ -1,0 +1,257 @@
+#include "lex.h"
+#include "compile.h"
+
+char op_prio[128];
+
+void op_prio_init() {
+  op_prio[MUL] = op_prio[DIV] = 100;
+  op_prio[ADD] = op_prio[SUB] = 99;
+  op_prio[EQ] = op_prio[NE] = 97;
+  op_prio[GT] = op_prio[LT] = op_prio[GE] = op_prio[LE] = 96;
+  op_prio[AND] = 92;
+  op_prio[XOR] = 91;
+  op_prio[OR] = 90;
+}
+
+ByteCode optoken2vmop(TokenType op) {
+  return op - ADD_TOKEN + ADD;
+}
+
+Parser *Parser_new(TokenList *tokens) {
+  Parser *parser = malloc(sizeof(Parser));
+  parser->tokens = tokens->tokens;
+  parser->cur = parser->tokens;
+  parser->size = 0;
+  parser->max = 8;
+  parser->ps = ParserScope_new(NULL);
+  parser->output = malloc(sizeof(VMCode) * parser->max);
+  parser->while_beginposs = SizeList_new();
+  parser->while_jmpends = SizeList_new();
+  return parser;
+}
+
+Token Parser_next(Parser *p) {
+  return *p->cur++;
+}
+
+Token Parser_eat(Parser *p, TokenType tp) {
+  if (p->cur->tp == tp)
+    return *p->cur++;
+  printf("Unexpected token");
+  exit(-1);
+}
+
+void Parser_add_output(Parser *p, VMCode code) {
+  if (p->size == p->max) {
+    p->max *= 2;
+    p->output = realloc(p->output, sizeof(VMCode) * p->max);
+  }
+  p->output[p->size++] = code;
+}
+
+void Parser_expr(Parser *p);
+
+void Parser_factor(Parser *p) {
+  if (p->cur->tp == EOF_TOKEN) {
+    printf("Unexpected EOF");
+    exit(-1);
+  } else if (p->cur->tp == INT_TOKEN) {
+    VMCode code = VMCode_new(PUSH_I);
+    code.i = Parser_next(p).int_token;
+    Parser_add_output(p, code);
+  } else if (p->cur->tp == FLOAT_TOKEN) {
+    VMCode code = VMCode_new(PUSH_F);
+    code.f = Parser_next(p).float_token;
+    Parser_add_output(p, code);
+  } else if (p->cur->tp == STR_TOKEN) {
+    VMCode code = VMCode_new(PUSH_S);
+    code.s = Parser_next(p).str_token;
+    Parser_add_output(p, code);
+  } else if (p->cur->tp == ID_TOKEN) {
+    String *id = Parser_next(p).str_token;
+    unsigned int fcnt = 0, vcnt = 0;
+    ParserScope *ps;
+    for (ps = p->ps; ps; ps = ps->parent, fcnt++) {
+      if (IDict_find(ps->dict, id->val))
+        break;
+    }
+    vcnt = *IDict_find(ps->dict, id->val);
+    VMCode code = VMCode_new(LOAD_V);
+    code.l = ((size_t)fcnt << 32) + vcnt;
+    Parser_add_output(p, code);
+  } else if (p->cur->tp == LSQBR) {
+    Parser_next(p);
+    size_t len = 0;
+    if (p->cur->tp != RSQBR) {
+      Parser_expr(p);
+      len++;
+      while (p->cur->tp == COMMA) {
+        Parser_next(p);
+        Parser_expr(p);
+        len++;
+      }
+    }
+    Parser_eat(p, RSQBR);
+    VMCode code = VMCode_new(BUILD_LIST);
+    code.l = len;
+    Parser_add_output(p, code);
+  } else if (p->cur->tp == LPAREN) {
+    Parser_next(p);
+    Parser_expr(p);
+    Parser_eat(p, RPAREN);
+  } else {
+    printf("Unexpected token");
+    exit(-1);
+  }
+}
+
+void Parser_expr(Parser *p) {
+  Parser_factor(p);
+  NewSeq(TokenType, op_stack);
+  while (op_prio[p->cur->tp]) {
+    TokenType op = Parser_next(p).tp;
+    while (SeqSize(op_stack) && op_prio[op_stack_val[op_stack_size - 1]] >= op_prio[op]) {
+      Parser_add_output(p, VMCode_new(optoken2vmop(op_stack_val[--op_stack_size])));
+    }
+    SeqAppend(TokenType, op_stack, op);
+    Parser_factor(p);
+  }
+  while (SeqSize(op_stack)) {
+    Parser_add_output(p, VMCode_new(optoken2vmop(op_stack_val[--op_stack_size])));
+  }
+  FreeSeq(op_stack);
+}
+
+void Parser_block(Parser *p);
+
+void Parser_stmt(Parser *p) {
+  if (p->tokens->tp == EOF_TOKEN) {
+    printf("Unexpected EOF");
+    exit(-1);
+  } else if (p->tokens->tp == SEMICOLON) {
+    Parser_next(p);
+  } else if (p->tokens->tp == VAR_TOKEN) {
+    Parser_next(p);
+    String *name = Parser_eat(p, ID_TOKEN).str_token;
+    if (p->cur->tp == ASSIGN) {
+      Parser_next(p);
+      Parser_expr(p);
+    } else {
+      VMCode nullcode = VMCode_new(PUSH_N);
+      Parser_add_output(p, nullcode);
+    }
+    IDict_insert(p->ps->dict, name->val, p->ps->cnt++);
+    VMCode code = VMCode_new(ADD_V);
+    Parser_add_output(p, code);
+    while (p->tokens->tp == COMMA) {
+      Parser_next(p);
+      name = Parser_eat(p, ID_TOKEN).str_token;
+      if (p->cur->tp == ASSIGN) {
+        Parser_next(p);
+        Parser_expr(p);
+      } else {
+        VMCode nullcode = VMCode_new(PUSH_N);
+        Parser_add_output(p, nullcode);
+      }
+      IDict_insert(p->ps->dict, name->val, p->ps->cnt++);
+      Parser_add_output(p, code);
+    }
+    Parser_eat(p, SEMICOLON);
+  } else if (p->cur->tp == IF_TOKEN) {
+    Parser_next(p);
+    Parser_expr(p);
+    NewSeq(size_t *, jmps);
+    Parser_add_output(p, VMCode_new(JNZ));
+    size_t *jnz = &p->output[p->size - 1].l;
+    Parser_block(p);
+    Parser_add_output(p, VMCode_new(JMP));
+    SeqAppend(size_t *, jmps, &p->output[p->size - 1].l);
+    *jnz = p->size - 1;
+    while (p->cur->tp == ELSE_TOKEN) {
+      Parser_next(p);
+      if (p->cur->tp == IF_TOKEN) {
+        Parser_next(p);
+        Parser_expr(p);
+        Parser_add_output(p, VMCode_new(JNZ));
+        jnz = &p->output[p->size - 1].l;
+        SeqAppend(size_t *, jmps, &p->output[p->size - 1].l);
+        *jnz = p->size - 1;
+      } else {
+        Parser_block(p);
+      }
+    }
+    for (size_t i = 0; i < jmps_size; i++) {
+      *jmps_val[i] = p->size - 1;
+    }
+    FreeSeq(jmps);
+  } else if (p->cur->tp == WHILE_TOKEN) {
+    Parser_next(p);
+    SizeList_append(p->while_jmpends, 0);
+    SizeList_append(p->while_beginposs, p->size - 1);
+    Parser_expr(p);
+  } else {
+  }
+}
+
+void Parser_block(Parser *p) {
+  Parser_eat(p, BEGIN);
+  while (p->tokens->tp != EOF_TOKEN && p->tokens->tp != END) {
+    Parser_stmt(p);
+  }
+  Parser_eat(p, END);
+}
+
+void Parser_program(Parser *p) {
+  while (p->tokens->tp != EOF_TOKEN) {
+    Parser_stmt(p);
+  }
+  Parser_add_output(p, VMCode_new(EXIT));
+}
+
+void Parser_free(Parser *parser) {
+  free(parser->tokens);
+  for (size_t i = 0; i < parser->size; i++)
+    VMCode_free(&parser->output[i]);
+  free(parser->output);
+  free(parser);
+  SizeList_free(parser->while_beginposs);
+  SizeList_free(parser->while_jmpends);
+}
+
+ParserScope *ParserScope_new(ParserScope *parent) {
+  ParserScope *ps = malloc(sizeof(ParserScope));
+  ps->parent = parent;
+  ps->dict = IDict_new();
+  return ps;
+}
+
+void ParserScope_free(ParserScope **ps) {
+  if (*ps) {
+    IDict_free((*ps)->dict);
+    ParserScope *parent = (*ps)->parent;
+    free(*ps);
+    *ps = parent;
+    return;
+  }
+}
+
+SizeList *SizeList_new() {
+  SizeList *list = malloc(sizeof(SizeList));
+  list->size = 0;
+  list->max = 8;
+  list->items = malloc(sizeof(size_t) * list->max);
+  return list;
+}
+
+void SizeList_append(SizeList *list, size_t val) {
+  if (list->size == list->max) {
+    list->max *= 2;
+    list->items = realloc(list->items, sizeof(size_t) * list->max);
+  }
+  list->items[list->size++] = val;
+}
+
+void SizeList_free(SizeList *list) {
+  free(list->items);
+  free(list);
+}
