@@ -32,7 +32,7 @@ Parser *Parser_new(TokenList *tokens) {
 Token Parser_next(Parser *p) { return *p->cur++; }
 
 Token Parser_eat(Parser *p, TokenType tp) {
-  if (p->cur->tp == tp)
+  if (p->cur && p->cur->tp == tp)
     return *p->cur++;
   printf("Unexpected token");
   exit(-1);
@@ -68,9 +68,14 @@ void Parser_factor(Parser *p) {
     String *id = Parser_next(p).str_token;
     unsigned int fcnt = 0, vcnt = 0;
     ParserScope *ps;
+    unsigned int *res = NULL;
     for (ps = p->ps; ps; ps = ps->parent, fcnt++) {
-      if (IDict_find(ps->dict, id->val))
+      if ((res = IDict_find(ps->dict, id->val)))
         break;
+    }
+    if (res == NULL) {
+      printf("Undefined variable '%s'", id->val);
+      exit(-1);
     }
     vcnt = *IDict_find(ps->dict, id->val);
     VMCode code = VMCode_new(LOAD_V);
@@ -97,6 +102,7 @@ void Parser_factor(Parser *p) {
     Parser_expr(p);
     Parser_eat(p, RPAREN);
   } else {
+    // printf("%d\n", p->cur->tp);
     printf("Unexpected token");
     exit(-1);
   }
@@ -149,12 +155,12 @@ void Parser_expr(Parser *p) {
 void Parser_block(Parser *p);
 
 void Parser_stmt(Parser *p) {
-  if (p->tokens->tp == EOF_TOKEN) {
+  if (p->cur->tp == EOF_TOKEN) {
     printf("Unexpected EOF");
     exit(-1);
-  } else if (p->tokens->tp == SEMICOLON) {
+  } else if (p->cur->tp == SEMICOLON) {
     Parser_next(p);
-  } else if (p->tokens->tp == VAR_TOKEN) {
+  } else if (p->cur->tp == VAR_TOKEN) {
     Parser_next(p);
     String *name = Parser_eat(p, ID_TOKEN).str_token;
     if (p->cur->tp == ASSIGN) {
@@ -167,7 +173,7 @@ void Parser_stmt(Parser *p) {
     IDict_insert(p->ps->dict, name->val, p->ps->cnt++);
     VMCode code = VMCode_new(ADD_V);
     Parser_add_output(p, code);
-    while (p->tokens->tp == COMMA) {
+    while (p->cur->tp == COMMA) {
       Parser_next(p);
       name = Parser_eat(p, ID_TOKEN).str_token;
       if (p->cur->tp == ASSIGN) {
@@ -229,16 +235,19 @@ void Parser_stmt(Parser *p) {
     p->while_beginposs->size--;
   } else if (p->cur->tp == BREAK_TOKEN) {
     Parser_next(p);
+    Parser_eat(p, SEMICOLON);
     Parser_add_output(p, VMCode_new(JMP));
     p->output[p->size - 1].l =
         p->while_beginposs->items[p->while_beginposs->size - 1];
   } else if (p->cur->tp == CONTINUE_TOKEN) {
     Parser_next(p);
+    Parser_eat(p, SEMICOLON);
     Parser_add_output(p, VMCode_new(JMP));
     SizeList_append(p->while_jmpends, p->size - 1);
   } else if (p->cur->tp == RETURN_TOKEN) {
     Parser_next(p);
     Parser_expr(p);
+    Parser_eat(p, SEMICOLON);
     Parser_add_output(p, VMCode_new(RET));
   } else if (p->cur->tp == FUNC_TOKEN) {
     Parser_next(p);
@@ -246,6 +255,8 @@ void Parser_stmt(Parser *p) {
     Parser_add_output(p, VMCode_new(PUSH_FN));
     Parser_add_output(p, VMCode_new(ADD_V));
     IDict_insert(p->ps->dict, name->val, p->ps->cnt++);
+    size_t pos = p->size;
+    Parser_add_output(p, VMCode_new(JMP));
     Parser_eat(p, LPAREN);
     p->ps = ParserScope_new(p->ps);
     if (p->cur->tp != RPAREN) {
@@ -261,6 +272,7 @@ void Parser_stmt(Parser *p) {
     }
     Parser_eat(p, RPAREN);
     Parser_block(p);
+    p->output[pos].l = p->size - 1;
     ParserScope_free(&p->ps);
   } else {
     Parser_expr(p);
@@ -285,21 +297,20 @@ void Parser_stmt(Parser *p) {
 
 void Parser_block(Parser *p) {
   Parser_eat(p, BEGIN);
-  while (p->tokens->tp != EOF_TOKEN && p->tokens->tp != END) {
+  while (p->cur->tp != EOF_TOKEN && p->cur->tp != END) {
     Parser_stmt(p);
   }
   Parser_eat(p, END);
 }
 
 void Parser_program(Parser *p) {
-  while (p->tokens->tp != EOF_TOKEN) {
+  while (p->cur->tp != EOF_TOKEN) {
     Parser_stmt(p);
   }
   Parser_add_output(p, VMCode_new(EXIT));
 }
 
 void Parser_free(Parser *parser) {
-  free(parser->tokens);
   for (size_t i = 0; i < parser->size; i++)
     VMCode_free(&parser->output[i]);
   free(parser->output);
@@ -312,6 +323,7 @@ ParserScope *ParserScope_new(ParserScope *parent) {
   ParserScope *ps = malloc(sizeof(ParserScope));
   ps->parent = parent;
   ps->dict = IDict_new();
+  ps->cnt = 0;
   return ps;
 }
 

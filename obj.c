@@ -175,6 +175,7 @@ void String_cat(String *str, char *other) {
 void String_free(String *str) {
   printf("String_free %s\n", str->val);
   free(str->val);
+  printf("Succeed\n");
   free(str);
 }
 
@@ -243,6 +244,7 @@ size_t _Dict_insert(DictBase *dict, char *key, Object obj) {
 }
 
 void _Dict_free(DictBase *dict) {
+  puts("Dict_free");
   for (size_t i = 0; i < 128; i++)
     if (dict->chs[i]) {
       _Dict_free(dict->chs[i]);
@@ -281,11 +283,13 @@ VMFrame *VMFrame_new(VMFrame *parent) {
   f->parent = parent;
   f->varlist = List_new();
   GC_obj_add_ch(f->gc_base, f->varlist->gc_base);
-  GC_obj_add_ch(f->gc_base, f->parent->gc_base);
+  if (f->parent)
+    GC_obj_add_ch(f->gc_base, f->parent->gc_base);
   return f;
 }
 
 void VMFrame_free(VMFrame *frame) {
+  puts("VMFrame_free");
   free(frame);
 }
 
@@ -299,5 +303,6 @@ Func *Func_new(VMFrame *frame, size_t pc) {
 }
 
 void Func_free(Func *f) {
+  puts("Func_free");
   free(f);
 }

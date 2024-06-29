@@ -1,7 +1,11 @@
 #include "obj.h"
+#include "lex.h"
+#include "compile.h"
+#include "vm.h"
 
 void init() {
   GC_init();
+  op_prio_init();
   ObjectTrait_init();
 }
 
@@ -17,7 +21,6 @@ void test_String() {
   printf("str: %llu, str2: %llu\n", str->gc_base, str2->gc_base);
   String *str3 = malloc(sizeof(String));
   *str3 = *str;
-  // TODO: 此处有误
   str3->gc_base = GC_objs_add(gc.G_bases[str->gc_base]);
   GC_active_add(str3->gc_base);
   GC_obj_add_ch(str->gc_base, str3->gc_base);
@@ -59,15 +62,51 @@ void test_Dict() {
   GC_collect();
 }
 
+String *read_file(char *filename) {
+  FILE *fp = fopen(filename, "r");
+  if (fp == NULL) {
+    printf("Error: file not found\n");
+    exit(-1);
+  }
+  String *res = String_new("");
+  char c;
+  while ((c = fgetc(fp)) != EOF) {
+    String_append(res, c);
+  }
+  fclose(fp);
+  return res;
+}
+
+void run_file(char *filename) {
+  String *data = read_file(filename);
+  // printf("%s", data->val);
+  TokenList *tl = tokenize(data->val);
+  GC_collect();
+  // for (size_t i = 0; i < tl->size; i++) {
+  //   printf("%d\n", tl->tokens[i].tp);
+  // }
+  Parser *p = Parser_new(tl);
+  Parser_program(p);
+  VMCode_run(p->output);
+  Parser_free(p);
+  GC_active_remove(tl->gc_base);
+  GC_collect();
+}
+
 void quit() {
   GC_quit();
 }
 
 int main(int argc, char **argv) {
   init();
-  test_String();
-  test_List();
-  test_Dict();
+  // test_String();
+  // test_List();
+  // test_Dict();
+  if (argc != 2) {
+    printf("Expect file name");
+    exit(-1);
+  }
+  run_file(argv[1]);
   quit();
   return 0;
 }

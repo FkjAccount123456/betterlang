@@ -14,7 +14,7 @@ void VMCode_free(VMCode *code) {
 }
 
 void VMCode_run(VMCode *code) {
-  size_t pc;
+  size_t pc = 0;
   List *stack = List_new();
   GC_active_add(stack->gc_base);
   VMFrame *frame = VMFrame_new(NULL);
@@ -23,6 +23,7 @@ void VMCode_run(VMCode *code) {
   NewSeq(size_t, pc_stack);
 
   while (code[pc].head != EXIT) {
+    printf("%d\n", code[pc].head);
     ByteCode head = code[pc].head;
     switch (head) {
     case PUSH_I:
@@ -35,13 +36,14 @@ void VMCode_run(VMCode *code) {
       List_append(stack, Object_String(String_new(code[pc].s->val)));
       break;
     case PUSH_FN:
-      List_append(stack, Object_Func(Func_new(frame, pc)));
+      List_append(stack, Object_Func(Func_new(frame, pc + 2)));
       break;
     case LOAD_V:
       {
         unsigned int fcnt = code[pc].l >> 32, vcnt = code[pc].l % (1ull << 32);
+        printf("LOAD_V %llu %u %u\n", code[pc].l, fcnt, vcnt);
         VMFrame *curf = frame;
-        for (;; curf = curf->parent, fcnt--)
+        for (; fcnt; curf = curf->parent, fcnt--)
           ;
         List_append(stack, curf->varlist->items[vcnt]);
         break;
@@ -50,7 +52,7 @@ void VMCode_run(VMCode *code) {
       {
         unsigned int fcnt = code[pc].l >> 32, vcnt = code[pc].l % (1ull << 32);
         VMFrame *curf = frame;
-        for (;; curf = curf->parent, fcnt--)
+        for (; fcnt; curf = curf->parent, fcnt--)
           ;
         curf->varlist->items[vcnt] = stack->items[--stack->size];
         break;
@@ -60,6 +62,7 @@ void VMCode_run(VMCode *code) {
         Object obj = stack->items[--stack->size];
         Object_disconnect(stack->gc_base, obj);
         List_append(frame->varlist, obj);
+        break;
       }
     case POP:
       {
@@ -131,7 +134,8 @@ void VMCode_run(VMCode *code) {
       }
     case CALL:
       {
-        Object func = stack->items[stack->size--];
+        Object func = stack->items[--stack->size];
+        Object_disconnect(stack->gc_base, func);
         for (size_t i = stack->size - code[pc].l; i < stack->size; i++) {
           stack->items[i - 1] = stack->items[i];
         }
@@ -224,6 +228,8 @@ void VMCode_run(VMCode *code) {
     }
     pc++;
   }
+  GC_active_remove(stack->gc_base);
+  GC_active_remove(frame->gc_base);
   FreeSeq(frame_stack);
 }
 

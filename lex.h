@@ -68,6 +68,7 @@ Token Token_str(String *str);
 typedef struct TokenList {
   Token *tokens;
   size_t size, max;
+  size_t gc_base;
 } TokenList;
 
 TokenList *TokenList_new();

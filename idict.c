@@ -3,14 +3,14 @@
 IDict *IDict_new() {
   IDict *d = malloc(sizeof(IDict));
   d->ival = d->hasval = 0;
-  d->chs = malloc(sizeof(IDict *) * 128);
+  d->chs = calloc(128, sizeof(IDict *));
   return d;
 }
 
 unsigned int *IDict_find(IDict *d, char *k) {
   if (!*k) {
     if (d->hasval)
-      return d->ival;
+      return &d->ival;
     else
       return NULL;
   }

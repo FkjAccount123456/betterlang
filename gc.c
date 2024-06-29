@@ -38,20 +38,19 @@ size_t GC_objs_add(GC_Object *obj) {
   return gc.size++;
 }
 
-void GC_active_add(size_t pos) {
-  GC_obj_add_ch(0, pos);
-}
+void GC_active_add(size_t pos) { GC_obj_add_ch(0, pos); }
 
-void GC_active_remove(size_t ch_pos) {
-  GC_obj_remove_ch(0, ch_pos);
-}
+void GC_active_remove(size_t ch_pos) { GC_obj_remove_ch(0, ch_pos); }
 
 void GC_obj_add_ch(size_t obj_pos, size_t ch) {
+  // printf("GC_obj_add_ch %llu %llu gc.size: %llu, gc.G_size: %llu, gc.G_max: %llu\n",
+        //  obj_pos, ch, gc.size, gc.G_sizes[obj_pos], gc.G_maxs[obj_pos]);
   if (gc.G_sizes[obj_pos] == gc.G_maxs[obj_pos]) {
     gc.G_maxs[obj_pos] *= 2;
     gc.G[obj_pos] = realloc(gc.G[obj_pos], sizeof(size_t) * gc.G_maxs[obj_pos]);
   }
   gc.G[obj_pos][gc.G_sizes[obj_pos]++] = ch;
+  // printf("Succeed\n");
 }
 
 void GC_obj_remove_ch(size_t obj_pos, size_t ch) {
@@ -79,6 +78,7 @@ void GC_collect() {
   gc.G_isrefed[0] = 0;
   _GC_recursive(0);
   for (size_t i = 1; i < gc.size; i++) {
+    printf("%llu\n", i);
     if (!gc.G_isrefed[i] && gc.G_bases[i]->ptr) {
       gc.G_bases[i]->dstcor(gc.G_bases[i]->ptr);
       gc.G_bases[i]->ptr = NULL;

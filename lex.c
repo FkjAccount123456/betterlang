@@ -33,9 +33,12 @@ Token Token_str(String *str) {
 void TokenList_append(TokenList *tl, Token token) {
   if (tl->size == tl->max) {
     tl->max *= 2;
-    tl->tokens = malloc(sizeof(Token) * tl->max);
+    tl->tokens = realloc(tl->tokens, sizeof(Token) * tl->max);
   }
   tl->tokens[tl->size++] = token;
+  if (token.tp == STR_TOKEN || token.tp == ID_TOKEN) {
+    GC_obj_add_ch(tl->gc_base, token.str_token->gc_base);
+  }
 }
 
 void TokenList_free(TokenList *tl) {
@@ -45,6 +48,8 @@ void TokenList_free(TokenList *tl) {
 
 TokenList *TokenList_new() {
   TokenList *tl = malloc(sizeof(TokenList));
+  tl->gc_base = GC_objs_add(GC_Object_new(tl, (GC_Dstcor)TokenList_free));
+  GC_active_add(tl->gc_base);
   tl->max = 8;
   tl->size = 0;
   tl->tokens = malloc(sizeof(Token) * tl->max);
