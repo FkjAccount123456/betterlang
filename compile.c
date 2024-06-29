@@ -1,5 +1,6 @@
-#include "lex.h"
 #include "compile.h"
+#include "lex.h"
+#include <stdlib.h>
 
 char op_prio[128];
 
@@ -13,9 +14,7 @@ void op_prio_init() {
   op_prio[OR] = 90;
 }
 
-ByteCode optoken2vmop(TokenType op) {
-  return op - ADD_TOKEN + ADD;
-}
+ByteCode optoken2vmop(TokenType op) { return op - ADD_TOKEN + ADD; }
 
 Parser *Parser_new(TokenList *tokens) {
   Parser *parser = malloc(sizeof(Parser));
@@ -30,9 +29,7 @@ Parser *Parser_new(TokenList *tokens) {
   return parser;
 }
 
-Token Parser_next(Parser *p) {
-  return *p->cur++;
-}
+Token Parser_next(Parser *p) { return *p->cur++; }
 
 Token Parser_eat(Parser *p, TokenType tp) {
   if (p->cur->tp == tp)
@@ -103,6 +100,30 @@ void Parser_factor(Parser *p) {
     printf("Unexpected token");
     exit(-1);
   }
+
+  while (p->cur->tp == LPAREN || p->cur->tp == LSQBR) {
+    if (p->cur->tp == LPAREN) {
+      Parser_next(p);
+      size_t nargs = 0;
+      if (p->cur->tp != RPAREN) {
+        Parser_expr(p);
+        nargs++;
+        while (p->cur->tp == COMMA) {
+          Parser_next(p);
+          Parser_expr(p);
+          nargs++;
+        }
+      }
+      Parser_eat(p, RPAREN);
+      Parser_add_output(p, VMCode_new(CALL));
+      p->output[p->size - 1].l = nargs;
+    } else if (p->cur->tp == LSQBR) {
+      Parser_next(p);
+      Parser_expr(p);
+      Parser_eat(p, RPAREN);
+      Parser_add_output(p, VMCode_new(NTH));
+    }
+  }
 }
 
 void Parser_expr(Parser *p) {
@@ -110,14 +131,17 @@ void Parser_expr(Parser *p) {
   NewSeq(TokenType, op_stack);
   while (op_prio[p->cur->tp]) {
     TokenType op = Parser_next(p).tp;
-    while (SeqSize(op_stack) && op_prio[op_stack_val[op_stack_size - 1]] >= op_prio[op]) {
-      Parser_add_output(p, VMCode_new(optoken2vmop(op_stack_val[--op_stack_size])));
+    while (SeqSize(op_stack) &&
+           op_prio[op_stack_val[op_stack_size - 1]] >= op_prio[op]) {
+      Parser_add_output(
+          p, VMCode_new(optoken2vmop(op_stack_val[--op_stack_size])));
     }
     SeqAppend(TokenType, op_stack, op);
     Parser_factor(p);
   }
   while (SeqSize(op_stack)) {
-    Parser_add_output(p, VMCode_new(optoken2vmop(op_stack_val[--op_stack_size])));
+    Parser_add_output(p,
+                      VMCode_new(optoken2vmop(op_stack_val[--op_stack_size])));
   }
   FreeSeq(op_stack);
 }
@@ -194,7 +218,7 @@ void Parser_stmt(Parser *p) {
     Parser_block(p);
     Parser_add_output(p, VMCode_new(JMP));
     p->output[p->size - 1].l =
-      p->while_beginposs->items[p->while_beginposs->size - 1];
+        p->while_beginposs->items[p->while_beginposs->size - 1];
     while (p->while_jmpends->size) {
       p->while_beginposs->size--;
       if (p->while_jmpends->items[p->while_beginposs->size] == 0) {
@@ -206,7 +230,8 @@ void Parser_stmt(Parser *p) {
   } else if (p->cur->tp == BREAK_TOKEN) {
     Parser_next(p);
     Parser_add_output(p, VMCode_new(JMP));
-    p->output[p->size - 1].l = p->while_beginposs->items[p->while_beginposs->size - 1];
+    p->output[p->size - 1].l =
+        p->while_beginposs->items[p->while_beginposs->size - 1];
   } else if (p->cur->tp == CONTINUE_TOKEN) {
     Parser_next(p);
     Parser_add_output(p, VMCode_new(JMP));
@@ -215,7 +240,46 @@ void Parser_stmt(Parser *p) {
     Parser_next(p);
     Parser_expr(p);
     Parser_add_output(p, VMCode_new(RET));
+  } else if (p->cur->tp == FUNC_TOKEN) {
+    Parser_next(p);
+    String *name = Parser_eat(p, ID_TOKEN).str_token;
+    Parser_add_output(p, VMCode_new(PUSH_FN));
+    Parser_add_output(p, VMCode_new(ADD_V));
+    IDict_insert(p->ps->dict, name->val, p->ps->cnt++);
+    Parser_eat(p, LPAREN);
+    p->ps = ParserScope_new(p->ps);
+    if (p->cur->tp != RPAREN) {
+      IDict_insert(p->ps->dict, Parser_eat(p, ID_TOKEN).str_token->val,
+                   p->ps->cnt++);
+      Parser_add_output(p, VMCode_new(ADD_V));
+      while (p->cur->tp == COMMA) {
+        Parser_next(p);
+        IDict_insert(p->ps->dict, Parser_eat(p, ID_TOKEN).str_token->val,
+                     p->ps->cnt++);
+        Parser_add_output(p, VMCode_new(ADD_V));
+      }
+    }
+    Parser_eat(p, RPAREN);
+    Parser_block(p);
+    ParserScope_free(&p->ps);
   } else {
+    Parser_expr(p);
+    if (p->cur->tp == ASSIGN) {
+      Parser_next(p);
+      if (p->output[p->size - 1].head == LOAD_V) {
+        p->size--;
+        Parser_expr(p);
+        Parser_add_output(p, VMCode_new(SET_V));
+      } else if (p->output[p->size - 1].head == NTH) {
+        p->size--;
+        Parser_expr(p);
+        Parser_add_output(p, VMCode_new(SET_NTH));
+      } else {
+        printf("Expect an l-value");
+        exit(-1);
+      }
+    }
+    Parser_eat(p, SEMICOLON);
   }
 }
 

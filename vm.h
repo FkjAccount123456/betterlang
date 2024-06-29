@@ -10,6 +10,7 @@ typedef enum ByteCode {
   PUSH_F,
   PUSH_S,
   PUSH_N,
+  PUSH_FN,
   LOAD_V,
   SET_V,
   ADD_V,
