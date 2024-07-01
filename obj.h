@@ -58,6 +58,7 @@ void Object_disconnect(size_t gc_base, Object obj);
 
 bool Object_to_bool(Object o);
 long long Object_cmp(Object a, Object b);
+void Object_print(Object o);
 
 typedef struct String {
   size_t gc_base;

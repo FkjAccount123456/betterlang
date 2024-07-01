@@ -80,6 +80,7 @@ Object Object_Func(Func *fn) {
 }
 
 size_t Object_get_gcval(Object obj) {
+  printf("%d\n", obj.tp->tp);
   switch (obj.tp->tp) {
     case INT_OBJ:
     case FLOAT_OBJ:
@@ -98,9 +99,12 @@ size_t Object_get_gcval(Object obj) {
 }
 
 void Object_disconnect(size_t gc_base, Object obj) {
+  // puts("Disconnect");
   size_t gcval = Object_get_gcval(obj);
+  // puts("Disconnecting");
   if (gcval)
     GC_obj_remove_ch(gc_base, gcval);
+  // puts("Disconnected");
 }
 
 bool Object_to_bool(Object o) {
@@ -136,6 +140,37 @@ long long Object_cmp(Object a, Object b) {
       return strcmp(a.s->val, b.s->val);
     default:
       printf("Unsupported binary operation");
+      exit(-1);
+  }
+}
+
+void Object_print(Object o) {
+  switch (o.tp->tp) {
+    case INT_OBJ:
+      printf("%lld", o.i);
+      break;
+    case FLOAT_OBJ:
+      printf("%lf", o.f);
+      break;
+    case NONE_OBJ:
+      printf("none");
+      break;
+    case STR_OBJ:
+      printf("%s", o.s->val);
+      break;
+    case LIST_OBJ:
+      printf("[");
+      if (o.l->size) {
+        Object_print(o.l->items[0]);
+        for (size_t i = 1; i < o.l->size; i++) {
+          printf(", ");
+          Object_print(o.l->items[0]);
+        }
+      }
+      printf("]");
+      break;
+    default:
+      printf("Failed to print.");
       exit(-1);
   }
 }

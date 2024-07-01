@@ -9,8 +9,8 @@
 #include <stdbool.h>
 #include "seq.h"
 
-#define free(x) \
-printf("free %llx\n", x); \
-free(x); \
+// #define free(x) \
+// printf("free %llx\n", x); \
+// free(x); \
 
 #endif // INCLUDES_H

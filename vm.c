@@ -7,6 +7,112 @@ VMCode VMCode_new(ByteCode head) {
   return vc;
 }
 
+void VMCode_print(VMCode code) {
+  switch (code.head) {
+  case EXIT:
+    printf("EXIT\n");
+    break;
+  case PUSH_I:
+    printf("PUSH_I %lld\n", code.i);
+    break;
+  case PUSH_F:
+    printf("PUSH_F %lf\n", code.f);
+    break;
+  case PUSH_N:
+    printf("PUSH_N\n");
+    break;
+  case PUSH_FN:
+    printf("PUSH_FN\n");
+    break;
+  case LOAD_V:
+    printf("LOAD_V %llu %llu\n", code.l >> 32, code.l % (1ull << 32));
+    break;
+  case SET_V:
+    printf("SET_V %llu %llu\n", code.l >> 32, code.l % (1ull << 32));
+    break;
+  case ADD_V:
+    printf("ADD_V\n");
+    break;
+  case POP:
+    printf("POP\n");
+    break;
+  case BUILD_LIST:
+    printf("BUILD_LIST %llu\n", code.l);
+    break;
+  case ADD:
+    printf("ADD\n");
+    break;
+  case SUB:
+    printf("SUB\n");
+    break;
+  case MUL:
+    printf("MUL\n");
+    break;
+  case DIV:
+    printf("DIV\n");
+    break;
+  case EQ:
+    printf("EQ\n");
+    break;
+  case NE:
+    printf("NE\n");
+    break;
+  case GT:
+    printf("GT\n");
+    break;
+  case LT:
+    printf("LT\n");
+    break;
+  case GE:
+    printf("GE\n");
+    break;
+  case LE:
+    printf("LE\n");
+    break;
+  case AND:
+    printf("AND\n");
+    break;
+  case OR:
+    printf("OR\n");
+    break;
+  case XOR:
+    printf("XOR\n");
+    break;
+  case POS:
+    printf("POS\n");
+    break;
+  case NEG:
+    printf("NEG\n");
+    break;
+  case NOT:
+    printf("NOT\n");
+    break;
+  case JMP:
+    printf("JMP %llu\n", code.l);
+    break;
+  case JZ:
+    printf("JZ %llu\n", code.l);
+    break;
+  case JNZ:
+    printf("JNZ %llu\n", code.l);
+    break;
+  case CALL:
+    printf("CALL %llu\n", code.l);
+    break;
+  case RET:
+    printf("RET\n");
+    break;
+  case NTH:
+    printf("NTH\n");
+    break;
+  case SET_NTH:
+    printf("SET_NTH\n");
+    break;
+  default:
+    printf("Unknown: %d\n", code.head);
+  }
+}
+
 void VMCode_run(VMCode *code) {
   size_t pc = 0;
   List *stack = List_new();
@@ -17,7 +123,7 @@ void VMCode_run(VMCode *code) {
   NewSeq(size_t, pc_stack);
 
   while (code[pc].head != EXIT) {
-    printf("%d\n", code[pc].head);
+    printf("%lld: %d stack.size: %llu\n", pc, code[pc].head, stack->size);
     ByteCode head = code[pc].head;
     switch (head) {
     case PUSH_I:
@@ -45,7 +151,7 @@ void VMCode_run(VMCode *code) {
     case LOAD_V:
       {
         unsigned int fcnt = code[pc].l >> 32, vcnt = code[pc].l % (1ull << 32);
-        // printf("LOAD_V %llu %u %u\n", code[pc].l, fcnt, vcnt);
+        printf("LOAD_V %llu %u %u\n", code[pc].l, fcnt, vcnt);
         VMFrame *curf = frame;
         for (; fcnt; curf = curf->parent, fcnt--)
           ;
@@ -65,6 +171,7 @@ void VMCode_run(VMCode *code) {
     case ADD_V:
       {
         Object obj = stack->items[--stack->size];
+        // puts("Hello!");
         Object_disconnect(stack->gc_base, obj);
         List_append(frame->varlist, obj);
         break;
@@ -72,6 +179,9 @@ void VMCode_run(VMCode *code) {
     case POP:
       {
         Object tmp = stack->items[--stack->size];
+        printf("POP: ");
+        Object_print(tmp);
+        puts("");
         Object_disconnect(stack->gc_base, tmp);
         break;
       }
@@ -139,6 +249,7 @@ void VMCode_run(VMCode *code) {
       }
     case CALL:
       {
+        printf("CALL %llu", code[pc].l);
         Object func = stack->items[stack->size - code[pc].l - 1];
         if (func.tp->tp == FUNC_OBJ) {
           Func *fn = func.fn;
@@ -236,6 +347,7 @@ void VMCode_run(VMCode *code) {
     //   exit(0);
     // }
     pc++;
+    puts("OK");
   }
   GC_active_remove(stack->gc_base);
   GC_active_remove(frame->gc_base);

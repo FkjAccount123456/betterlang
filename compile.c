@@ -124,6 +124,7 @@ void Parser_factor(Parser *p) {
       Parser_eat(p, RPAREN);
       Parser_add_output(p, VMCode_new(CALL));
       p->output[p->size - 1].l = nargs;
+      // printf("%d %llu\n", p->output[p->size - 1].head, p->output[p->size - 1].l);
     } else if (p->cur->tp == LSQBR) {
       Parser_next(p);
       Parser_expr(p);
@@ -135,20 +136,21 @@ void Parser_factor(Parser *p) {
 
 void Parser_expr(Parser *p) {
   Parser_factor(p);
-  NewSeq(TokenType, op_stack);
+  NewSeq(ByteCode, op_stack);
   while (op_prio[p->cur->tp]) {
-    TokenType op = Parser_next(p).tp;
+    TokenType tp = Parser_next(p).tp;
+    ByteCode op = optoken2vmop(tp);
     while (SeqSize(op_stack) &&
            op_prio[op_stack_val[op_stack_size - 1]] >= op_prio[op]) {
       Parser_add_output(
-          p, VMCode_new(optoken2vmop(op_stack_val[--op_stack_size])));
+          p, VMCode_new(op_stack_val[--op_stack_size]));
     }
-    SeqAppend(TokenType, op_stack, op);
+    SeqAppend(ByteCode, op_stack, op);
     Parser_factor(p);
   }
   while (SeqSize(op_stack)) {
     Parser_add_output(p,
-                      VMCode_new(optoken2vmop(op_stack_val[--op_stack_size])));
+                      VMCode_new(op_stack_val[--op_stack_size]));
   }
   FreeSeq(op_stack);
 }

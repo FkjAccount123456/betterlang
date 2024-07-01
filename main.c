@@ -88,7 +88,10 @@ void run_file(char *filename) {
   Parser *p = Parser_new(tl);
   GC_active_add(p->gc_base);
   Parser_program(p);
-  printf("p->output: %llx %lld\n", p->output, p->max);
+  for (size_t i = 0; i < p->size; i++) {
+    printf("%llu: ", i);
+    VMCode_print(p->output[i]);
+  }
   VMCode_run(p->output);
   GC_active_remove(p->gc_base);
   GC_active_remove(tl->gc_base);
@@ -101,6 +104,7 @@ void quit() {
 
 int main(int argc, char **argv) {
   init();
+  printf("+: %d *: %d", op_prio[ADD], op_prio[SUB]);
   // test_String();
   // test_List();
   // test_Dict();

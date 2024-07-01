@@ -1,0 +1,10 @@
+2*2+2;
+2*(2+2);
+
+func fac(num) {
+    if num == 0 { return 1; }
+    else        { return fac(num - 1) *num; }
+}
+
+var a = 10;
+fac(a);

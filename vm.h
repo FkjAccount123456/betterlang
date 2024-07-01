@@ -57,6 +57,7 @@ typedef struct VMCode {
 } VMCode;
 
 VMCode VMCode_new(ByteCode head);
+void VMCode_print(VMCode code);
 
 void VMCode_run(VMCode *code);
 
