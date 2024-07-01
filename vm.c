@@ -29,6 +29,8 @@ void VMCode_run(VMCode *code) {
     case PUSH_S:
       {
         List_append(stack, Object_String(String_new(code[pc].s->val)));
+        // printf("%llx %llx %llu\n", code, stack->items, stack->size);
+        // stack->items[0] = Object_int(0);
         // Object tmp = Object_String(String_new(code[pc].s->val));
         // printf("%llx %llx\n", stack->items, code);
         // GC_obj_add_ch(stack->gc_base, Object_get_gcval(tmp));
@@ -48,6 +50,7 @@ void VMCode_run(VMCode *code) {
         for (; fcnt; curf = curf->parent, fcnt--)
           ;
         List_append(stack, curf->varlist->items[vcnt]);
+        // puts("LOAD_V");
         break;
       }
     case SET_V:
@@ -136,12 +139,7 @@ void VMCode_run(VMCode *code) {
       }
     case CALL:
       {
-        Object func = stack->items[--stack->size];
-        Object_disconnect(stack->gc_base, func);
-        for (size_t i = stack->size - code[pc].l; i < stack->size; i++) {
-          stack->items[i - 1] = stack->items[i];
-        }
-        stack->size--;
+        Object func = stack->items[stack->size - code[pc].l - 1];
         if (func.tp->tp == FUNC_OBJ) {
           Func *fn = func.fn;
           SeqAppend(VMFrame *, frame_stack, frame);
@@ -153,14 +151,17 @@ void VMCode_run(VMCode *code) {
           GC_obj_add_ch(fn->frame->gc_base, frame->gc_base);
           SeqAppend(size_t, pc_stack, pc);
           pc = fn->pc;
+          stack->size -= code[pc].l;
         } else if (func.tp->tp == BUILTIN_OBJ) {
           Builtin fn = func.builtin;
-          Object res = fn(code[pc].l, stack->items - code[pc].l);
           stack->size -= code[pc].l;
+          Object res = fn(code[pc].l, stack->items + stack->size);
+          stack->size--;
           List_append(stack, res);
         } else {
           printf("Expect a function to be called");
         }
+        Object_disconnect(stack->gc_base, func);
         break;
       }
     case RET:
@@ -168,6 +169,8 @@ void VMCode_run(VMCode *code) {
         pc = SeqPop(pc_stack);
         GC_active_remove(frame->gc_base);
         frame = SeqPop(frame_stack);
+        stack->items[stack->size - 2] = stack->items[stack->size - 1];
+        stack->size--;
         break;
       }
     case NTH:
@@ -228,10 +231,10 @@ void VMCode_run(VMCode *code) {
       printf("Unknown bytecode '%d'.", head);
       exit(-1);
     }
-    if (pc == 3) {
-      free(code);
-      exit(0);
-    }
+    // if (pc == 3) {
+    //   free(code);
+    //   exit(0);
+    // }
     pc++;
   }
   GC_active_remove(stack->gc_base);
