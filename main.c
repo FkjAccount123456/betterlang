@@ -86,9 +86,11 @@ void run_file(char *filename) {
   //   printf("%d\n", tl->tokens[i].tp);
   // }
   Parser *p = Parser_new(tl);
+  GC_active_add(p->gc_base);
   Parser_program(p);
+  printf("p->output: %llx %lld\n", p->output, p->max);
   VMCode_run(p->output);
-  Parser_free(p);
+  GC_active_remove(p->gc_base);
   GC_active_remove(tl->gc_base);
   GC_collect();
 }

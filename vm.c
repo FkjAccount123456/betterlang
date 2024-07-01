@@ -7,12 +7,6 @@ VMCode VMCode_new(ByteCode head) {
   return vc;
 }
 
-void VMCode_free(VMCode *code) {
-  if (code->head == PUSH_S) {
-    String_free(code->s);
-  }
-}
-
 void VMCode_run(VMCode *code) {
   size_t pc = 0;
   List *stack = List_new();
@@ -33,15 +27,23 @@ void VMCode_run(VMCode *code) {
       List_append(stack, Object_float(code[pc].f));
       break;
     case PUSH_S:
-      List_append(stack, Object_String(String_new(code[pc].s->val)));
-      break;
+      {
+        List_append(stack, Object_String(String_new(code[pc].s->val)));
+        // Object tmp = Object_String(String_new(code[pc].s->val));
+        // printf("%llx %llx\n", stack->items, code);
+        // GC_obj_add_ch(stack->gc_base, Object_get_gcval(tmp));
+        // stack->items[stack->size++] = Object_none();
+        // printf("PUSH_S %s %llx base %llx\n", code[pc].s->val,
+        // stack->items[stack->size - 1].s, code[pc].s);
+        break;
+      }
     case PUSH_FN:
       List_append(stack, Object_Func(Func_new(frame, pc + 2)));
       break;
     case LOAD_V:
       {
         unsigned int fcnt = code[pc].l >> 32, vcnt = code[pc].l % (1ull << 32);
-        printf("LOAD_V %llu %u %u\n", code[pc].l, fcnt, vcnt);
+        // printf("LOAD_V %llu %u %u\n", code[pc].l, fcnt, vcnt);
         VMFrame *curf = frame;
         for (; fcnt; curf = curf->parent, fcnt--)
           ;
@@ -226,6 +228,10 @@ void VMCode_run(VMCode *code) {
       printf("Unknown bytecode '%d'.", head);
       exit(-1);
     }
+    if (pc == 3) {
+      free(code);
+      exit(0);
+    }
     pc++;
   }
   GC_active_remove(stack->gc_base);
@@ -302,8 +308,8 @@ double _float_binaryop(ByteCode op, double a, double b) {
 }
 
 Object Object_binaryop(ByteCode op, Object a, Object b) {
-  if ((a.tp == INT_OBJ || a.tp->tp == FLOAT_OBJ) &&
-      (b.tp == INT_OBJ || b.tp->tp == FLOAT_OBJ)) {
+  if ((a.tp->tp == INT_OBJ || a.tp->tp == FLOAT_OBJ) &&
+      (b.tp->tp == INT_OBJ || b.tp->tp == FLOAT_OBJ)) {
     if (a.tp->tp == FLOAT_OBJ || b.tp->tp == FLOAT_OBJ) {
       return Object_float(_float_binaryop(op, a.f, b.f));
     }

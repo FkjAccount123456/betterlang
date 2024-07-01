@@ -31,6 +31,7 @@ void IDict_insert(IDict *d, char *k, unsigned int v) {
 }
 
 void IDict_free(IDict *d) {
+  puts("IDict_free");
   for (size_t i = 0; i < 128; i++)
     if (d->chs[i])
       IDict_free(d->chs[i]);

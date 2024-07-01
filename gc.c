@@ -80,11 +80,14 @@ void GC_collect() {
   for (size_t i = 1; i < gc.size; i++) {
     printf("%llu\n", i);
     if (!gc.G_isrefed[i] && gc.G_bases[i]->ptr) {
+      printf("Collect ptr=%llx\n", gc.G_bases[i]->ptr);
       gc.G_bases[i]->dstcor(gc.G_bases[i]->ptr);
       gc.G_bases[i]->ptr = NULL;
+      puts("Collected");
     }
     gc.G_isrefed[i] = false;
   }
+  puts("GC_collect finished");
 }
 
 void GC_quit() {

@@ -21,6 +21,7 @@ void SizeList_append(SizeList *list, size_t val);
 void SizeList_free(SizeList *list);
 
 typedef struct Parser {
+  size_t gc_base;
   Token *tokens;
   Token *cur;
   VMCode *output;

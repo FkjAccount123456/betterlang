@@ -1,6 +1,5 @@
 #include "compile.h"
 #include "lex.h"
-#include <stdlib.h>
 
 char op_prio[128];
 
@@ -18,6 +17,7 @@ ByteCode optoken2vmop(TokenType op) { return op - ADD_TOKEN + ADD; }
 
 Parser *Parser_new(TokenList *tokens) {
   Parser *parser = malloc(sizeof(Parser));
+  parser->gc_base = GC_objs_add(GC_Object_new(parser, (GC_Dstcor)Parser_free));
   parser->tokens = tokens->tokens;
   parser->cur = parser->tokens;
   parser->size = 0;
@@ -62,8 +62,9 @@ void Parser_factor(Parser *p) {
     Parser_add_output(p, code);
   } else if (p->cur->tp == STR_TOKEN) {
     VMCode code = VMCode_new(PUSH_S);
-    code.s = Parser_next(p).str_token;
+    code.s = String_new(Parser_next(p).str_token->val);
     Parser_add_output(p, code);
+    GC_obj_add_ch(p->gc_base, code.s->gc_base);
   } else if (p->cur->tp == ID_TOKEN) {
     String *id = Parser_next(p).str_token;
     unsigned int fcnt = 0, vcnt = 0;
@@ -290,6 +291,8 @@ void Parser_stmt(Parser *p) {
         printf("Expect an l-value");
         exit(-1);
       }
+    } else {
+      Parser_add_output(p, VMCode_new(POP));
     }
     Parser_eat(p, SEMICOLON);
   }
@@ -311,12 +314,13 @@ void Parser_program(Parser *p) {
 }
 
 void Parser_free(Parser *parser) {
-  for (size_t i = 0; i < parser->size; i++)
-    VMCode_free(&parser->output[i]);
+  printf("Parser_free %llx output %llx\n", parser, parser->output);
   free(parser->output);
-  free(parser);
+  puts("Parser_free 1");
   SizeList_free(parser->while_beginposs);
   SizeList_free(parser->while_jmpends);
+  ParserScope_free(&parser->ps);
+  free(parser);
 }
 
 ParserScope *ParserScope_new(ParserScope *parent) {
@@ -328,6 +332,7 @@ ParserScope *ParserScope_new(ParserScope *parent) {
 }
 
 void ParserScope_free(ParserScope **ps) {
+  puts("ParserScope_free");
   if (*ps) {
     IDict_free((*ps)->dict);
     ParserScope *parent = (*ps)->parent;

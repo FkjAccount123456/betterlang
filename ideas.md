@@ -44,3 +44,13 @@ begin用一个stack存
 end和if的endpos存储差不多，但是为了区分多个while必须在stack之中加上NULL
 、、、，这些都得存Parser里，还得再写个SizeList
 
+# 2024-6-30
+不知道为啥别的都能free掉就引号里的字符串不行
+## 对了，补充一点betterlang实现设计
+- ObjTrait体系直接继承的betterlang v0
+- 单趟式编译（不解析生成AST）到字节码（说实话if while这些真不好编译）（终于知道为什么Lua没有continue了）（
+- 甚至因为编译的原因我直接用的函数作用域（避免计算break/continue的时候要退出多少层作用域）（当然也是模仿Python）
+- 使用标记清除GC，虽然实现的很烂
+- GC直接当成有向图，拿邻接表存（看来不能说OI没用，这不是数据结构和算法吗）（
+- 隐式引用传递（动态语言基本都有的特性）一个对象用双向引用实现，前面说了
+

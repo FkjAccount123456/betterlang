@@ -143,6 +143,7 @@ long long Object_cmp(Object a, Object b) {
 String *String_new(char *base) {
   String *str = malloc(sizeof(String));
   str->gc_base = GC_objs_add(GC_Object_new(str, (GC_Dstcor)String_free));
+  printf("String_new\n");
   str->size = strlen(base);
   str->max = 8;
   while (str->max < str->size)
@@ -173,9 +174,8 @@ void String_cat(String *str, char *other) {
 }
 
 void String_free(String *str) {
-  printf("String_free %s\n", str->val);
+  printf("String_free %llx\n", str);
   free(str->val);
-  printf("Succeed\n");
   free(str);
 }
 
@@ -200,7 +200,7 @@ void List_append(List *list, Object obj) {
 }
 
 void List_free(List *list) {
-  puts("List_free");
+  printf("List_free %llx\n", list);
   free(list->items);
   free(list);
 }
@@ -244,7 +244,6 @@ size_t _Dict_insert(DictBase *dict, char *key, Object obj) {
 }
 
 void _Dict_free(DictBase *dict) {
-  puts("Dict_free");
   for (size_t i = 0; i < 128; i++)
     if (dict->chs[i]) {
       _Dict_free(dict->chs[i]);
@@ -272,7 +271,7 @@ void Dict_insert(Dict *dict, char *key, Object obj) {
 }
 
 void Dict_free(Dict *dict) {
-  puts("Dict_free");
+  printf("Dict_free %llx\n", dict);
   _Dict_free(dict->val);
   free(dict);
 }
@@ -289,7 +288,7 @@ VMFrame *VMFrame_new(VMFrame *parent) {
 }
 
 void VMFrame_free(VMFrame *frame) {
-  puts("VMFrame_free");
+  printf("VMFrame_free %llx\n", frame);
   free(frame);
 }
 
@@ -303,6 +302,6 @@ Func *Func_new(VMFrame *frame, size_t pc) {
 }
 
 void Func_free(Func *f) {
-  puts("Func_free");
+  printf("Func_free %llx\n", f);
   free(f);
 }
