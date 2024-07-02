@@ -93,7 +93,7 @@ void GC_collect() {
     } else if (gc.G_bases[i]->ptr == NULL) {
       // puts("NULL");
     } else {
-      printf("%llu failed to collect\n", i);
+      // printf("%llu failed to collect\n", i);
     }
     gc.G_isrefed[i] = false;
   }
