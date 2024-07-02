@@ -79,6 +79,13 @@ Object Object_Func(Func *fn) {
   return obj;
 }
 
+Object Object_Builtin(Builtin b) {
+  Object obj;
+  obj.tp = &builtin_trait;
+  obj.builtin = b;
+  return obj;
+}
+
 size_t Object_get_gcval(Object obj) {
   // printf("%d\n", obj.tp->tp);
   switch (obj.tp->tp) {
@@ -184,7 +191,7 @@ void Object_print(Object o) {
 String *String_new(char *base) {
   String *str = malloc(sizeof(String));
   str->gc_base = GC_objs_add(GC_Object_new(str, (GC_Dstcor)String_free));
-  printf("String_new\n");
+  // printf("String_new\n");
   str->size = strlen(base);
   str->max = 8;
   while (str->max < str->size)
@@ -215,7 +222,7 @@ void String_cat(String *str, char *other) {
 }
 
 void String_free(String *str) {
-  printf("String_free %llx\n", str);
+  // printf("String_free %llx\n", str);
   free(str->val);
   free(str);
 }
@@ -241,7 +248,7 @@ void List_append(List *list, Object obj) {
 }
 
 void List_free(List *list) {
-  printf("List_free %llx\n", list);
+  // printf("List_free %llx\n", list);
   free(list->items);
   free(list);
 }
@@ -312,7 +319,7 @@ void Dict_insert(Dict *dict, char *key, Object obj) {
 }
 
 void Dict_free(Dict *dict) {
-  printf("Dict_free %llx\n", dict);
+  // printf("Dict_free %llx\n", dict);
   _Dict_free(dict->val);
   free(dict);
 }
@@ -334,7 +341,7 @@ VMFrame *VMFrame_new(VMFrame *parent) {
 }
 
 void VMFrame_free(VMFrame *frame) {
-  printf("VMFrame_free %llx\n", frame);
+  // printf("VMFrame_free %llx\n", frame);
   free(frame);
 }
 
@@ -348,6 +355,6 @@ Func *Func_new(VMFrame *frame, size_t pc) {
 }
 
 void Func_free(Func *f) {
-  printf("Func_free %llx\n", f);
+  // printf("Func_free %llx\n", f);
   free(f);
 }

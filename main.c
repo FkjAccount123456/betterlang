@@ -104,7 +104,7 @@ void quit() {
 
 int main(int argc, char **argv) {
   init();
-  printf("+: %d *: %d", op_prio[ADD], op_prio[SUB]);
+  // printf("+: %d *: %d", op_prio[ADD], op_prio[SUB]);
   // test_String();
   // test_List();
   // test_Dict();

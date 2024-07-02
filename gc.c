@@ -72,7 +72,7 @@ void GC_obj_remove_ch(size_t obj_pos, size_t ch) {
 void _GC_recursive(size_t obj_pos) {
   if (gc.G_isrefed[obj_pos])
     return;
-  printf("_GC_recursive %llu\n", obj_pos);
+  // printf("_GC_recursive %llu\n", obj_pos);
   gc.G_isrefed[obj_pos] = true;
   for (size_t i = 0; i < gc.G_sizes[obj_pos]; i++) {
     _GC_recursive(gc.G[obj_pos][i]);
@@ -80,22 +80,22 @@ void _GC_recursive(size_t obj_pos) {
 }
 
 void GC_collect() {
-  puts("GC_collect");
+  // puts("GC_collect");
   gc.G_isrefed[0] = 0;
   _GC_recursive(0);
   for (size_t i = 1; i < gc.size; i++) {
-    printf("%llu\n", i);
+    // printf("%llu\n", i);
     if (!gc.G_isrefed[i] && gc.G_bases[i]->ptr) {
-      printf("Collect ptr=%llx\n", gc.G_bases[i]->ptr);
+      // printf("Collect ptr=%llx\n", gc.G_bases[i]->ptr);
       gc.G_bases[i]->dstcor(gc.G_bases[i]->ptr);
       gc.G_bases[i]->ptr = NULL;
-      puts("Collected");
+      // puts("Collected");
     } else if (gc.G_bases[i]->ptr == NULL) {
-      puts("NULL");
+      // puts("NULL");
     }
     gc.G_isrefed[i] = false;
   }
-  puts("GC_collect finished");
+  // puts("GC_collect finished");
 }
 
 void GC_quit() {

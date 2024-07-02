@@ -18,6 +18,9 @@ void VMCode_print(VMCode code) {
   case PUSH_F:
     printf("PUSH_F %lf\n", code.f);
     break;
+  case PUSH_S:
+    printf("PUSH_S %s\n", code.s->val);
+    break;
   case PUSH_N:
     printf("PUSH_N\n");
     break;
@@ -113,6 +116,50 @@ void VMCode_print(VMCode code) {
   }
 }
 
+Object _b_print(size_t nargs, Object *args) {
+  for (size_t i = 0; i < nargs; i++) {
+    Object_print(args[i]);
+  }
+  return Object_none();
+}
+
+Object _b_println(size_t nargs, Object *args) {
+  for (size_t i = 0; i < nargs; i++) {
+    Object_print(args[i]);
+  }
+  putchar('\n');
+  return Object_none();
+}
+
+Object _b_len(size_t nargs, Object *args) {
+  assert(nargs == 1);
+  if (args->tp->tp == LIST_OBJ) {
+    return Object_int(args->l->size);
+  } else if (args->tp->tp == STR_OBJ) {
+    return Object_int(args->s->size);
+  } else {
+    assert(0);
+  }
+}
+
+Object _b_append(size_t nargs, Object *args) {
+  assert(nargs == 2);
+  if (args->tp->tp == LIST_OBJ) {
+    List_append(args[0].l, args[1]);
+  } else if (args->tp->tp == STR_OBJ) {
+    assert(args[1].tp->tp == INT_OBJ);
+    String_append(args[0].s, args[1].i);
+  } else {
+    assert(0);
+  }
+  return Object_none();
+}
+
+Object _b_getchar(size_t nargs, Object *args) {
+  assert(nargs == 0);
+  return  Object_int(getchar());
+}
+
 void VMCode_run(VMCode *code) {
   size_t pc = 0;
   List *stack = List_new();
@@ -122,6 +169,12 @@ void VMCode_run(VMCode *code) {
   NewSeq(VMFrame *, frame_stack);
   NewSeq(size_t, pc_stack);
 
+  List_append(frame->varlist, Object_Builtin(_b_print));
+  List_append(frame->varlist, Object_Builtin(_b_println));
+  List_append(frame->varlist, Object_Builtin(_b_len));
+  List_append(frame->varlist, Object_Builtin(_b_append));
+  List_append(frame->varlist, Object_Builtin(_b_getchar));
+
   while (code[pc].head != EXIT) {
     // printf("%lld: %d stack.size: %llu\n", pc, code[pc].head, stack->size);
     // for (size_t i = 0; i < stack->size; i++) {
@@ -129,7 +182,7 @@ void VMCode_run(VMCode *code) {
     //   printf(" ");
     // }
     // puts("");
-    VMCode_print(code[pc]);
+    // VMCode_print(code[pc]);
     ByteCode head = code[pc].head;
     switch (head) {
     case PUSH_I:
@@ -137,6 +190,9 @@ void VMCode_run(VMCode *code) {
       break;
     case PUSH_F:
       List_append(stack, Object_float(code[pc].f));
+      break;
+    case PUSH_N:
+      List_append(stack, Object_none());
       break;
     case PUSH_S:
       {
@@ -185,9 +241,9 @@ void VMCode_run(VMCode *code) {
     case POP:
       {
         Object tmp = stack->items[--stack->size];
-        printf("POP: ");
-        Object_print(tmp);
-        puts("");
+        // printf("POP: ");
+        // Object_print(tmp);
+        // puts("");
         Object_disconnect(stack->gc_base, tmp);
         break;
       }

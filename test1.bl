@@ -7,15 +7,39 @@ func fac(num) {
 }
 
 var a = 10;
-fac(a);
+println(fac(a));
 
 var i = 0;
-while i < 10 {
+while 1 {
     i = i + 1;
-    i;
+    if i == 5  { continue; }
+    if i == 10 { break; }
+    println(i);
 }
 
 var l = [1, 2, [2, 4, 5]];
-l;
+println(l, " ", l[2], " ", l[2][0]);
 l[2][0] = 3;
-l;
+println(l, " ", l[2], " ", l[2][0]);
+println("len(l): ", len(l));
+
+var l1 = [], j = 0;
+while j < 10 {
+    j = j + 1;
+    append(l1, j);
+    println(l1, " ", j);
+}
+
+func readln(msg, str) {
+    print(msg);
+    var ch = getchar();
+    while ch != 10 {
+        append(str, ch);
+        ch = getchar();
+    }
+    return none;
+}
+
+var s = "";
+readln("Please input something: ", s);
+println("Your message: ", s);

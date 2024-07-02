@@ -20,7 +20,7 @@ typedef enum TokenType {
   CONTINUE_TOKEN,
   TRUE_TOKEN,
   FALSE_TOKEN,
-  NULL_TOKEN,
+  NONE_TOKEN,
 
   ADD_TOKEN,
   SUB_TOKEN,

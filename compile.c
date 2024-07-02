@@ -26,6 +26,13 @@ Parser *Parser_new(TokenList *tokens) {
   parser->output = malloc(sizeof(VMCode) * parser->max);
   parser->while_beginposs = SizeList_new();
   parser->while_jmpends = SizeList_new();
+
+  IDict_insert(parser->ps->dict, "print", parser->ps->cnt++);
+  IDict_insert(parser->ps->dict, "println", parser->ps->cnt++);
+  IDict_insert(parser->ps->dict, "len", parser->ps->cnt++);
+  IDict_insert(parser->ps->dict, "append", parser->ps->cnt++);
+  IDict_insert(parser->ps->dict, "getchar", parser->ps->cnt++);
+
   return parser;
 }
 
@@ -65,6 +72,20 @@ void Parser_factor(Parser *p) {
     code.s = String_new(Parser_next(p).str_token->val);
     Parser_add_output(p, code);
     GC_obj_add_ch(p->gc_base, code.s->gc_base);
+  } else if (p->cur->tp == TRUE_TOKEN) {
+    Parser_next(p);
+    VMCode code = VMCode_new(PUSH_I);
+    code.i = 1;
+    Parser_add_output(p, code);
+  } else if (p->cur->tp == FALSE_TOKEN) {
+    Parser_next(p);
+    VMCode code = VMCode_new(PUSH_I);
+    code.i = 0;
+    Parser_add_output(p, code);
+  } else if (p->cur->tp == NONE_TOKEN) {
+    Parser_next(p);
+    VMCode code = VMCode_new(PUSH_N);
+    Parser_add_output(p, code);
   } else if (p->cur->tp == ID_TOKEN) {
     String *id = Parser_next(p).str_token;
     unsigned int fcnt = 0, vcnt = 0;
@@ -224,7 +245,7 @@ void Parser_stmt(Parser *p) {
     Parser_expr(p);
     Parser_add_output(p, VMCode_new(JNZ));
     SizeList_append(p->while_jmpends, p->size - 1);
-    printf("ADD: %llu\n", p->size - 1);
+    // printf("ADD: %llu\n", p->size - 1);
     Parser_block(p);
     Parser_add_output(p, VMCode_new(JMP));
     p->output[p->size - 1].l =
@@ -237,13 +258,13 @@ void Parser_stmt(Parser *p) {
       p->output[p->while_jmpends->items[p->while_jmpends->size]].l = p->size - 1;
       // printf("SET: %llu %llu", p->while_jmpends->items[p->while_jmpends->size], p->size - 1);
     }
-  } else if (p->cur->tp == BREAK_TOKEN) {
+  } else if (p->cur->tp == CONTINUE_TOKEN) {
     Parser_next(p);
     Parser_eat(p, SEMICOLON);
     Parser_add_output(p, VMCode_new(JMP));
     p->output[p->size - 1].l =
         p->while_beginposs->items[p->while_beginposs->size - 1];
-  } else if (p->cur->tp == CONTINUE_TOKEN) {
+  } else if (p->cur->tp == BREAK_TOKEN) {
     Parser_next(p);
     Parser_eat(p, SEMICOLON);
     Parser_add_output(p, VMCode_new(JMP));
@@ -319,9 +340,9 @@ void Parser_program(Parser *p) {
 }
 
 void Parser_free(Parser *parser) {
-  printf("Parser_free %llx output %llx\n", parser, parser->output);
+  // printf("Parser_free %llx output %llx\n", parser, parser->output);
   free(parser->output);
-  puts("Parser_free 1");
+  // puts("Parser_free 1");
   SizeList_free(parser->while_beginposs);
   SizeList_free(parser->while_jmpends);
   ParserScope_free(&parser->ps);
@@ -337,7 +358,7 @@ ParserScope *ParserScope_new(ParserScope *parent) {
 }
 
 void ParserScope_free(ParserScope **ps) {
-  puts("ParserScope_free");
+  // puts("ParserScope_free");
   if (*ps) {
     IDict_free((*ps)->dict);
     ParserScope *parent = (*ps)->parent;

@@ -52,6 +52,7 @@ Object Object_String(String *s);
 Object Object_List(List *l);
 Object Object_Dict(Dict *d);
 Object Object_Func(Func *fn);
+Object Object_Builtin(Builtin b);
 
 size_t Object_get_gcval(Object obj);
 void Object_disconnect(size_t gc_base, Object obj);

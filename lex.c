@@ -181,12 +181,12 @@ TokenList *tokenize(char *code) {
         TokenList_append(res, Token_new(BREAK_TOKEN));
       else if (!strcmp(iv, "continue"))
         TokenList_append(res, Token_new(CONTINUE_TOKEN));
-      else if (!strcmp(iv, "True"))
+      else if (!strcmp(iv, "true"))
         TokenList_append(res, Token_new(TRUE_TOKEN));
-      else if (!strcmp(iv, "False"))
+      else if (!strcmp(iv, "false"))
         TokenList_append(res, Token_new(FALSE_TOKEN));
-      else if (!strcmp(iv, "Null"))
-        TokenList_append(res, Token_new(NULL_TOKEN));
+      else if (!strcmp(iv, "none"))
+        TokenList_append(res, Token_new(NONE_TOKEN));
       else if (!strcmp(iv, "and"))
         TokenList_append(res, Token_new(CONTINUE_TOKEN));
       else if (!strcmp(iv, "or"))
