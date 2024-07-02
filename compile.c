@@ -54,6 +54,7 @@ void Parser_add_output(Parser *p, VMCode code) {
 }
 
 void Parser_expr(Parser *p);
+void Parser_block(Parser *p);
 
 void Parser_factor(Parser *p) {
   if (p->cur->tp == EOF_TOKEN) {
@@ -86,6 +87,29 @@ void Parser_factor(Parser *p) {
     Parser_next(p);
     VMCode code = VMCode_new(PUSH_N);
     Parser_add_output(p, code);
+  } else if (p->cur->tp == FUNC_TOKEN) {
+    Parser_next(p);
+    Parser_add_output(p, VMCode_new(PUSH_FN));
+    Parser_add_output(p, VMCode_new(NOOP));
+    size_t pos = p->size;
+    Parser_add_output(p, VMCode_new(JMP));
+    Parser_eat(p, LPAREN);
+    p->ps = ParserScope_new(p->ps);
+    if (p->cur->tp != RPAREN) {
+      IDict_insert(p->ps->dict, Parser_eat(p, ID_TOKEN).str_token->val,
+                   p->ps->cnt++);
+      // Parser_add_output(p, VMCode_new(ADD_V));
+      while (p->cur->tp == COMMA) {
+        Parser_next(p);
+        IDict_insert(p->ps->dict, Parser_eat(p, ID_TOKEN).str_token->val,
+                     p->ps->cnt++);
+        // Parser_add_output(p, VMCode_new(ADD_V));
+      }
+    }
+    Parser_eat(p, RPAREN);
+    Parser_block(p);
+    p->output[pos].l = p->size - 1;
+    ParserScope_free(&p->ps);
   } else if (p->cur->tp == ID_TOKEN) {
     String *id = Parser_next(p).str_token;
     unsigned int fcnt = 0, vcnt = 0;
@@ -175,8 +199,6 @@ void Parser_expr(Parser *p) {
   }
   FreeSeq(op_stack);
 }
-
-void Parser_block(Parser *p);
 
 void Parser_stmt(Parser *p) {
   if (p->cur->tp == EOF_TOKEN) {

@@ -5,6 +5,7 @@
 
 typedef enum ByteCode {
   EXIT = 64,
+  NOOP,
 
   PUSH_I,
   PUSH_F,

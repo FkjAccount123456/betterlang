@@ -185,6 +185,8 @@ void VMCode_run(VMCode *code) {
     // VMCode_print(code[pc]);
     ByteCode head = code[pc].head;
     switch (head) {
+      case NOOP:
+        break;
     case PUSH_I:
       List_append(stack, Object_int(code[pc].i));
       break;

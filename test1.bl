@@ -58,3 +58,6 @@ while x < 10 {
     println(x);
     x = counter();
 }
+
+var fn1 = func(a) { return a + 1; };
+println(fn1(1));
