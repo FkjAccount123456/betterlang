@@ -40,6 +40,21 @@ func readln(msg, str) {
     return none;
 }
 
-#var s = "";
-#readln("Please input something: ", s);
-#println("Your message: ", s);
+var s = "";
+readln("Please input something: ", s);
+println("Your message: ", s);
+
+func Counter(start) {
+    func next() {
+        start = start + 1;
+        return start;
+    }
+    return next;
+}
+
+var counter = Counter(0);
+var x = counter();
+while x < 10 {
+    println(x);
+    x = counter();
+}

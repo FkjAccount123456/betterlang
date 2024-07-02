@@ -351,6 +351,7 @@ void VMCode_run(VMCode *code) {
         frame = SeqPop(frame_stack);
         // stack->items[stack->size - 2] = stack->items[stack->size - 1];
         // stack->size--;
+        GC_collect();
         break;
       }
     case NTH:

@@ -274,7 +274,7 @@ void Parser_stmt(Parser *p) {
     Parser_expr(p);
     Parser_eat(p, SEMICOLON);
     Parser_add_output(p, VMCode_new(RET));
-  } else if (p->cur->tp == FUNC_TOKEN) {
+  } else if (p->cur->tp == FUNC_TOKEN && (p->cur + 1)->tp == ID_TOKEN) {
     Parser_next(p);
     String *name = Parser_eat(p, ID_TOKEN).str_token;
     Parser_add_output(p, VMCode_new(PUSH_FN));
