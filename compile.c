@@ -147,13 +147,36 @@ void Parser_factor(Parser *p) {
     Parser_next(p);
     Parser_expr(p);
     Parser_eat(p, RPAREN);
+  } else if (p->cur->tp == BEGIN) {
+    Parser_next(p);
+    size_t len = 0;
+    if (p->cur->tp != END) {
+      Parser_add_output(p, VMCode_new(PUSH_S));
+      p->output[p->size - 1].s = Parser_eat(p, ID_TOKEN).str_token;
+      Parser_eat(p, COLON);
+      Parser_expr(p);
+      len++;
+      while (p->cur->tp == COMMA) {
+        Parser_next(p);
+        if (p->cur->tp == END)
+          break;
+        Parser_add_output(p, VMCode_new(PUSH_S));
+        p->output[p->size - 1].s = Parser_eat(p, ID_TOKEN).str_token;
+        Parser_eat(p, COLON);
+        Parser_expr(p);
+        len++;
+      }
+    }
+    Parser_eat(p, END);
+    Parser_add_output(p, VMCode_new(BUILD_DICT));
+    p->output[p->size - 1].l = len;
   } else {
     // printf("%d\n", p->cur->tp);
     printf("Unexpected token");
     exit(-1);
   }
 
-  while (p->cur->tp == LPAREN || p->cur->tp == LSQBR) {
+  while (p->cur->tp == LPAREN || p->cur->tp == LSQBR || p->cur->tp == DOT) {
     if (p->cur->tp == LPAREN) {
       Parser_next(p);
       size_t nargs = 0;
@@ -174,6 +197,11 @@ void Parser_factor(Parser *p) {
       Parser_next(p);
       Parser_expr(p);
       Parser_eat(p, RSQBR);
+      Parser_add_output(p, VMCode_new(NTH));
+    } else {
+      Parser_next(p);
+      Parser_add_output(p, VMCode_new(PUSH_S));
+      p->output[p->size - 1].s = Parser_eat(p, ID_TOKEN).str_token;
       Parser_add_output(p, VMCode_new(NTH));
     }
   }

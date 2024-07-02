@@ -42,6 +42,9 @@ void VMCode_print(VMCode code) {
   case BUILD_LIST:
     printf("BUILD_LIST %llu\n", code.l);
     break;
+    case BUILD_DICT:
+      printf("BUILD_DICT %llu\n", code.l);
+      break;
   case ADD:
     printf("ADD\n");
     break;
@@ -260,6 +263,19 @@ void VMCode_run(VMCode *code) {
         }
         stack->size -= code[pc].l;
         List_append(stack, Object_List(list));
+        break;
+      }
+    case BUILD_DICT:
+      {
+        Dict *dict = Dict_new();
+        for (size_t i = 0; i < code[pc].l; i++) {
+          Object v = stack->items[--stack->size];
+          Object k = stack->items[--stack->size];
+          Object_disconnect(stack->gc_base, v);
+          Object_disconnect(stack->gc_base, k);
+          Dict_insert(dict, k.s->val, v);
+        }
+        List_append(stack, Object_Dict(dict));
         break;
       }
     case ADD:

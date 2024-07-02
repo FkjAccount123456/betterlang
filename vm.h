@@ -17,6 +17,7 @@ typedef enum ByteCode {
   ADD_V,
   POP,
   BUILD_LIST,
+  BUILD_DICT,
   
   ADD,
   SUB,

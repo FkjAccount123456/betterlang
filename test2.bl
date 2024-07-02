@@ -1,0 +1,16 @@
+var obj = {
+    a: 10,
+    b: 20,
+    print: func(self) {
+        println("a: ", self["a"], ", b: ", self["b"]);
+        return none;
+    },
+    setA: func(self, a) {
+        self["a"] = a;
+        return none;
+    },
+};
+
+obj.print(obj);
+obj.setA(obj, 30);
+obj.print(obj);

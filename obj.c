@@ -313,6 +313,9 @@ Object *Dict_find(Dict *dict, char *key) {
 
 void Dict_insert(Dict *dict, char *key, Object obj) {
   dict->size++;
+  size_t gcval = Object_get_gcval(obj);
+  if (gcval)
+    GC_obj_add_ch(dict->gc_base, gcval);
   size_t need_disconnect = _Dict_insert(dict->val, key, obj);
   if (need_disconnect != 0)
     GC_obj_remove_ch(dict->gc_base, need_disconnect);
