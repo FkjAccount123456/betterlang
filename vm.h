@@ -4,7 +4,7 @@
 #include "obj.h"
 
 typedef enum ByteCode {
-  EXIT,
+  EXIT = 64,
 
   PUSH_I,
   PUSH_F,
@@ -24,8 +24,8 @@ typedef enum ByteCode {
   EQ,
   NE,
   GT,
-  LT,
   GE,
+  LT,
   LE,
   AND,
   OR,

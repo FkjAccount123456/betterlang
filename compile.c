@@ -34,7 +34,7 @@ Token Parser_next(Parser *p) { return *p->cur++; }
 Token Parser_eat(Parser *p, TokenType tp) {
   if (p->cur && p->cur->tp == tp)
     return *p->cur++;
-  printf("Unexpected token");
+  printf("Unexpected token %d %d", p->cur->tp, tp);
   exit(-1);
 }
 
@@ -128,7 +128,7 @@ void Parser_factor(Parser *p) {
     } else if (p->cur->tp == LSQBR) {
       Parser_next(p);
       Parser_expr(p);
-      Parser_eat(p, RPAREN);
+      Parser_eat(p, RSQBR);
       Parser_add_output(p, VMCode_new(NTH));
     }
   }
@@ -137,7 +137,7 @@ void Parser_factor(Parser *p) {
 void Parser_expr(Parser *p) {
   Parser_factor(p);
   NewSeq(ByteCode, op_stack);
-  while (op_prio[p->cur->tp]) {
+  while (op_prio[optoken2vmop(p->cur->tp)]) {
     TokenType tp = Parser_next(p).tp;
     ByteCode op = optoken2vmop(tp);
     while (SeqSize(op_stack) &&
@@ -224,18 +224,19 @@ void Parser_stmt(Parser *p) {
     Parser_expr(p);
     Parser_add_output(p, VMCode_new(JNZ));
     SizeList_append(p->while_jmpends, p->size - 1);
+    printf("ADD: %llu\n", p->size - 1);
     Parser_block(p);
     Parser_add_output(p, VMCode_new(JMP));
     p->output[p->size - 1].l =
         p->while_beginposs->items[p->while_beginposs->size - 1];
     while (p->while_jmpends->size) {
-      p->while_beginposs->size--;
-      if (p->while_jmpends->items[p->while_beginposs->size] == 0) {
+      p->while_jmpends->size--;
+      if (p->while_jmpends->items[p->while_jmpends->size] == 0) {
         break;
       }
-      p->output[p->while_beginposs->size].l = p->size - 1;
+      p->output[p->while_jmpends->items[p->while_jmpends->size]].l = p->size - 1;
+      // printf("SET: %llu %llu", p->while_jmpends->items[p->while_jmpends->size], p->size - 1);
     }
-    p->while_beginposs->size--;
   } else if (p->cur->tp == BREAK_TOKEN) {
     Parser_next(p);
     Parser_eat(p, SEMICOLON);
@@ -283,8 +284,10 @@ void Parser_stmt(Parser *p) {
       Parser_next(p);
       if (p->output[p->size - 1].head == LOAD_V) {
         p->size--;
+        size_t x = p->output[p->size].l;
         Parser_expr(p);
         Parser_add_output(p, VMCode_new(SET_V));
+        p->output[p->size - 1].l = x;
       } else if (p->output[p->size - 1].head == NTH) {
         p->size--;
         Parser_expr(p);

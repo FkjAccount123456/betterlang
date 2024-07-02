@@ -164,7 +164,7 @@ void Object_print(Object o) {
         Object_print(o.l->items[0]);
         for (size_t i = 1; i < o.l->size; i++) {
           printf(", ");
-          Object_print(o.l->items[0]);
+          Object_print(o.l->items[i]);
         }
       }
       printf("]");

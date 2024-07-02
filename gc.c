@@ -54,9 +54,9 @@ void GC_obj_add_ch(size_t obj_pos, size_t ch) {
 }
 
 void GC_obj_remove_ch(size_t obj_pos, size_t ch) {
-  puts("GC_obj_remove_ch");
+  // puts("GC_obj_remove_ch");
   size_t pos;
-  puts("GC_obj_remove_ch 1");
+  // puts("GC_obj_remove_ch 1");
   for (pos = 0; pos < gc.G_sizes[obj_pos]; pos++)
     if (gc.G[obj_pos][pos] == ch)
       goto f;
@@ -64,7 +64,7 @@ void GC_obj_remove_ch(size_t obj_pos, size_t ch) {
   f:
   for (size_t i = pos; i < gc.G_sizes[obj_pos] - 1; i++) {
     gc.G[obj_pos][i] = gc.G[obj_pos][i + 1];
-  puts("GC_obj_remove_ch");
+  // puts("GC_obj_remove_ch");
   }
   gc.G_sizes[obj_pos]--;
 }
@@ -90,6 +90,8 @@ void GC_collect() {
       gc.G_bases[i]->dstcor(gc.G_bases[i]->ptr);
       gc.G_bases[i]->ptr = NULL;
       puts("Collected");
+    } else if (gc.G_bases[i]->ptr == NULL) {
+      puts("NULL");
     }
     gc.G_isrefed[i] = false;
   }

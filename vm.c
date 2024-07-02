@@ -123,12 +123,12 @@ void VMCode_run(VMCode *code) {
   NewSeq(size_t, pc_stack);
 
   while (code[pc].head != EXIT) {
-    printf("%lld: %d stack.size: %llu\n", pc, code[pc].head, stack->size);
-    for (size_t i = 0; i < stack->size; i++) {
-      Object_print(stack->items[i]);
-      printf(" ");
-    }
-    puts("");
+    // printf("%lld: %d stack.size: %llu\n", pc, code[pc].head, stack->size);
+    // for (size_t i = 0; i < stack->size; i++) {
+    //   Object_print(stack->items[i]);
+    //   printf(" ");
+    // }
+    // puts("");
     VMCode_print(code[pc]);
     ByteCode head = code[pc].head;
     switch (head) {
@@ -194,11 +194,13 @@ void VMCode_run(VMCode *code) {
     case BUILD_LIST:
       {
         List *list = List_new();
-        for (size_t i = stack->size - code[pc].l; i < stack->size; i++) {
-          List_append(list, stack->items[i]);
-          Object_disconnect(stack->gc_base, stack->items[i]);
+        for (size_t i = code[pc].l; i > 0; i--) {
+          // Object_print(stack->items[stack->size - i]);
+          // puts("");
+          List_append(list, stack->items[stack->size - i]);
+          Object_disconnect(stack->gc_base, stack->items[stack->size - i]);
         }
-        stack->size -= code[pc].i;
+        stack->size -= code[pc].l;
         List_append(stack, Object_List(list));
         break;
       }
@@ -320,9 +322,9 @@ void VMCode_run(VMCode *code) {
       }
     case SET_NTH:
       {
+        Object val = stack->items[--stack->size];
         Object index = stack->items[--stack->size];
         Object base = stack->items[--stack->size];
-        Object val = stack->items[--stack->size];
         if (base.tp->tp == DICT_OBJ && index.tp->tp == STR_OBJ) {
           String *str_index = index.s;
           Dict_insert(base.d, str_index->val, val);
@@ -338,7 +340,7 @@ void VMCode_run(VMCode *code) {
           Object_disconnect(base.l->gc_base, list_base->items[index.i]);
           list_base->items[index.i] = val;
         } else {
-          printf("Wrong base or index type");
+          printf("Wrong base or index type %d %d", base.tp->tp, index.tp->tp);
           exit(-1);
         }
         Object_disconnect(stack->gc_base, base);

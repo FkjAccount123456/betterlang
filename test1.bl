@@ -8,3 +8,14 @@ func fac(num) {
 
 var a = 10;
 fac(a);
+
+var i = 0;
+while i < 10 {
+    i = i + 1;
+    i;
+}
+
+var l = [1, 2, [2, 4, 5]];
+l;
+l[2][0] = 3;
+l;
