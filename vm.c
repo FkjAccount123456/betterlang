@@ -124,6 +124,12 @@ void VMCode_run(VMCode *code) {
 
   while (code[pc].head != EXIT) {
     printf("%lld: %d stack.size: %llu\n", pc, code[pc].head, stack->size);
+    for (size_t i = 0; i < stack->size; i++) {
+      Object_print(stack->items[i]);
+      printf(" ");
+    }
+    puts("");
+    VMCode_print(code[pc]);
     ByteCode head = code[pc].head;
     switch (head) {
     case PUSH_I:
@@ -151,12 +157,12 @@ void VMCode_run(VMCode *code) {
     case LOAD_V:
       {
         unsigned int fcnt = code[pc].l >> 32, vcnt = code[pc].l % (1ull << 32);
-        printf("LOAD_V %llu %u %u\n", code[pc].l, fcnt, vcnt);
+        // printf("LOAD_V %llu %u %u\n", code[pc].l, fcnt, vcnt);
         VMFrame *curf = frame;
         for (; fcnt; curf = curf->parent, fcnt--)
           ;
-        List_append(stack, curf->varlist->items[vcnt]);
         // puts("LOAD_V");
+        List_append(stack, curf->varlist->items[vcnt]);
         break;
       }
     case SET_V:
@@ -171,7 +177,7 @@ void VMCode_run(VMCode *code) {
     case ADD_V:
       {
         Object obj = stack->items[--stack->size];
-        // puts("Hello!");
+        // printf("obj.tp %d\n", obj.tp->tp);
         Object_disconnect(stack->gc_base, obj);
         List_append(frame->varlist, obj);
         break;
@@ -249,20 +255,22 @@ void VMCode_run(VMCode *code) {
       }
     case CALL:
       {
-        printf("CALL %llu", code[pc].l);
+        // printf("CALL %llu\n", code[pc].l);
         Object func = stack->items[stack->size - code[pc].l - 1];
         if (func.tp->tp == FUNC_OBJ) {
           Func *fn = func.fn;
           SeqAppend(VMFrame *, frame_stack, frame);
-          frame = malloc(sizeof(VMFrame));
-          *frame = *fn->frame;
-          frame->gc_base = GC_objs_add(gc.G_bases[frame->gc_base]);
+          frame = VMFrame_new(fn->frame);
           GC_active_add(frame->gc_base);
-          GC_obj_add_ch(frame->gc_base, fn->frame->gc_base);
-          GC_obj_add_ch(fn->frame->gc_base, frame->gc_base);
           SeqAppend(size_t, pc_stack, pc);
-          pc = fn->pc;
           stack->size -= code[pc].l;
+          for (size_t i = 0; i < code[pc].l; i++) {
+            Object tmp = stack->items[stack->size + i];
+            Object_disconnect(stack->gc_base, tmp);
+            List_append(frame->varlist, tmp);
+          }
+          pc = fn->pc;
+          stack->size--;
         } else if (func.tp->tp == BUILTIN_OBJ) {
           Builtin fn = func.builtin;
           stack->size -= code[pc].l;
@@ -280,8 +288,8 @@ void VMCode_run(VMCode *code) {
         pc = SeqPop(pc_stack);
         GC_active_remove(frame->gc_base);
         frame = SeqPop(frame_stack);
-        stack->items[stack->size - 2] = stack->items[stack->size - 1];
-        stack->size--;
+        // stack->items[stack->size - 2] = stack->items[stack->size - 1];
+        // stack->size--;
         break;
       }
     case NTH:
@@ -347,7 +355,7 @@ void VMCode_run(VMCode *code) {
     //   exit(0);
     // }
     pc++;
-    puts("OK");
+    // puts("OK");
   }
   GC_active_remove(stack->gc_base);
   GC_active_remove(frame->gc_base);
@@ -452,7 +460,7 @@ Object Object_binaryop(ByteCode op, Object a, Object b) {
     return Object_int(Object_cmp(a, b) >= 0);
   if (op == LE)
     return Object_int(Object_cmp(a, b) <= 0);
-  printf("Unsupported binary operation.");
+  printf("Unsupported binary operation %d %d", a.tp->tp, b.tp->tp);
   exit(-1);
 }
 

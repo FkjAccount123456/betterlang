@@ -265,12 +265,12 @@ void Parser_stmt(Parser *p) {
     if (p->cur->tp != RPAREN) {
       IDict_insert(p->ps->dict, Parser_eat(p, ID_TOKEN).str_token->val,
                    p->ps->cnt++);
-      Parser_add_output(p, VMCode_new(ADD_V));
+      // Parser_add_output(p, VMCode_new(ADD_V));
       while (p->cur->tp == COMMA) {
         Parser_next(p);
         IDict_insert(p->ps->dict, Parser_eat(p, ID_TOKEN).str_token->val,
                      p->ps->cnt++);
-        Parser_add_output(p, VMCode_new(ADD_V));
+        // Parser_add_output(p, VMCode_new(ADD_V));
       }
     }
     Parser_eat(p, RPAREN);

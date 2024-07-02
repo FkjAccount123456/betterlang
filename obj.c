@@ -80,7 +80,7 @@ Object Object_Func(Func *fn) {
 }
 
 size_t Object_get_gcval(Object obj) {
-  printf("%d\n", obj.tp->tp);
+  // printf("%d\n", obj.tp->tp);
   switch (obj.tp->tp) {
     case INT_OBJ:
     case FLOAT_OBJ:
@@ -168,6 +168,12 @@ void Object_print(Object o) {
         }
       }
       printf("]");
+      break;
+    case DICT_OBJ:
+      printf("<Dict>");
+      break;
+    case FUNC_OBJ:
+      printf("<Func>");
       break;
     default:
       printf("Failed to print.");
@@ -315,6 +321,11 @@ VMFrame *VMFrame_new(VMFrame *parent) {
   VMFrame *f = malloc(sizeof(VMFrame));
   f->gc_base = GC_objs_add(GC_Object_new(f, (GC_Dstcor)VMFrame_free));
   f->parent = parent;
+  if (parent) {
+    f->parent->gc_base = GC_objs_add(gc.G_bases[f->parent->gc_base]);
+    GC_obj_add_ch(f->parent->gc_base, parent->gc_base);
+    GC_obj_add_ch(parent->gc_base, f->parent->gc_base);
+  }
   f->varlist = List_new();
   GC_obj_add_ch(f->gc_base, f->varlist->gc_base);
   if (f->parent)

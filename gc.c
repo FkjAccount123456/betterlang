@@ -54,12 +54,18 @@ void GC_obj_add_ch(size_t obj_pos, size_t ch) {
 }
 
 void GC_obj_remove_ch(size_t obj_pos, size_t ch) {
+  puts("GC_obj_remove_ch");
   size_t pos;
+  puts("GC_obj_remove_ch 1");
   for (pos = 0; pos < gc.G_sizes[obj_pos]; pos++)
     if (gc.G[obj_pos][pos] == ch)
-      break;
-  for (size_t i = pos; i < gc.G_sizes[obj_pos] - 1; i++)
+      goto f;
+  return;
+  f:
+  for (size_t i = pos; i < gc.G_sizes[obj_pos] - 1; i++) {
     gc.G[obj_pos][i] = gc.G[obj_pos][i + 1];
+  puts("GC_obj_remove_ch");
+  }
   gc.G_sizes[obj_pos]--;
 }
 
