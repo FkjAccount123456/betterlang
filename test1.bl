@@ -40,6 +40,6 @@ func readln(msg, str) {
     return none;
 }
 
-var s = "";
-readln("Please input something: ", s);
-println("Your message: ", s);
+#var s = "";
+#readln("Please input something: ", s);
+#println("Your message: ", s);

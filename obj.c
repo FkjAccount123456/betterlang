@@ -329,9 +329,8 @@ VMFrame *VMFrame_new(VMFrame *parent) {
   f->gc_base = GC_objs_add(GC_Object_new(f, (GC_Dstcor)VMFrame_free));
   f->parent = parent;
   if (parent) {
-    f->parent->gc_base = GC_objs_add(gc.G_bases[f->parent->gc_base]);
-    GC_obj_add_ch(f->parent->gc_base, parent->gc_base);
-    GC_obj_add_ch(parent->gc_base, f->parent->gc_base);
+    // f->parent->gc_base = GC_objs_add(gc.G_bases[f->parent->gc_base]);
+    GC_obj_add_ch(f->gc_base, parent->gc_base);
   }
   f->varlist = List_new();
   GC_obj_add_ch(f->gc_base, f->varlist->gc_base);

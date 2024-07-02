@@ -333,6 +333,9 @@ void VMCode_run(VMCode *code) {
           Builtin fn = func.builtin;
           stack->size -= code[pc].l;
           Object res = fn(code[pc].l, stack->items + stack->size);
+          for (size_t i = 0; i < code[pc].l; i++) {
+            Object_disconnect(stack->gc_base, stack->items[i]);
+          }
           stack->size--;
           List_append(stack, res);
         } else {
