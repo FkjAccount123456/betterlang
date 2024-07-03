@@ -188,7 +188,7 @@ TokenList *tokenize(char *code) {
       else if (!strcmp(iv, "none"))
         TokenList_append(res, Token_new(NONE_TOKEN));
       else if (!strcmp(iv, "and"))
-        TokenList_append(res, Token_new(CONTINUE_TOKEN));
+        TokenList_append(res, Token_new(AND_TOKEN));
       else if (!strcmp(iv, "or"))
         TokenList_append(res, Token_new(OR_TOKEN));
       else if (!strcmp(iv, "xor"))
