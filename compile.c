@@ -301,7 +301,7 @@ void Parser_stmt(Parser *p) {
     Parser_block(p);
     Parser_add_output(p, VMCode_new(JMP));
     p->output[p->size - 1].l =
-        p->while_beginposs->items[p->while_beginposs->size - 1];
+        p->while_beginposs->items[--p->while_beginposs->size];
     while (p->while_jmpends->size) {
       p->while_jmpends->size--;
       if (p->while_jmpends->items[p->while_jmpends->size] == 0) {
