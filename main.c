@@ -88,10 +88,10 @@ void run_file(char *filename) {
   Parser *p = Parser_new(tl);
   GC_active_add(p->gc_base);
   Parser_program(p);
-  for (size_t i = 0; i < p->size; i++) {
-    printf("%llu: ", i);
-    VMCode_print(p->output[i]);
-  }
+  // for (size_t i = 0; i < p->size; i++) {
+  //   printf("%llu: ", i);
+  //   VMCode_print(p->output[i]);
+  // }
   VMCode_run(p->output);
   GC_active_remove(p->gc_base);
   GC_active_remove(tl->gc_base);
