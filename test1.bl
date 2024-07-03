@@ -61,3 +61,9 @@ while x < 10 {
 
 var fn1 = func(a) { return a + 1; };
 println(fn1(1));
+
+println(0.2 + 0.1);
+
+if 0      { println(0); }
+else if 1 { println(1); }
+else      { println(2); }

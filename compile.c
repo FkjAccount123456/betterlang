@@ -278,6 +278,8 @@ void Parser_stmt(Parser *p) {
         Parser_expr(p);
         Parser_add_output(p, VMCode_new(JNZ));
         jnz = &p->output[p->size - 1].l;
+        Parser_block(p);
+        Parser_add_output(p, VMCode_new(JMP));
         SeqAppend(size_t *, jmps, &p->output[p->size - 1].l);
         *jnz = p->size - 1;
       } else {
