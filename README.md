@@ -64,6 +64,7 @@ func hello(name) {
     return none; // 注意，一个函数必须确保最后返回一个值，否则会出错
 }
 hello("world"); // 函数调用参数如果有误编译时不会报错，但运行时一定会出错
+hello("betterlang");
 ```
 ### 递归
 ```
