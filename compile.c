@@ -264,30 +264,30 @@ void Parser_stmt(Parser *p) {
   } else if (p->cur->tp == IF_TOKEN) {
     Parser_next(p);
     Parser_expr(p);
-    NewSeq(size_t *, jmps);
+    NewSeq(size_t, jmps);
     Parser_add_output(p, VMCode_new(JNZ));
-    size_t *jnz = &p->output[p->size - 1].l;
+    size_t jnz = p->size - 1;
     Parser_block(p);
     Parser_add_output(p, VMCode_new(JMP));
-    SeqAppend(size_t *, jmps, &p->output[p->size - 1].l);
-    *jnz = p->size - 1;
+    SeqAppend(size_t, jmps, p->size - 1);
+    p->output[jnz].l = p->size - 1;
     while (p->cur->tp == ELSE_TOKEN) {
       Parser_next(p);
       if (p->cur->tp == IF_TOKEN) {
         Parser_next(p);
         Parser_expr(p);
         Parser_add_output(p, VMCode_new(JNZ));
-        jnz = &p->output[p->size - 1].l;
+        jnz = p->size - 1;
         Parser_block(p);
         Parser_add_output(p, VMCode_new(JMP));
-        SeqAppend(size_t *, jmps, &p->output[p->size - 1].l);
-        *jnz = p->size - 1;
+        SeqAppend(size_t, jmps, p->size - 1);
+        p->output[jnz].l = p->size - 1;
       } else {
         Parser_block(p);
       }
     }
     for (size_t i = 0; i < jmps_size; i++) {
-      *jmps_val[i] = p->size - 1;
+      p->output[jmps_val[i]].l = p->size - 1;
     }
     FreeSeq(jmps);
   } else if (p->cur->tp == WHILE_TOKEN) {
