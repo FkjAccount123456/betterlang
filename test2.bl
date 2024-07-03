@@ -11,6 +11,12 @@ var obj = {
     },
 };
 
-obj.print(obj);
-obj.setA(obj, 30);
-obj.print(obj);
+obj.print();
+obj.setA(30);
+obj.print();
+
+var adder = {
+    add: func(self, a, b) { return a + b; },
+};
+
+println(adder.add(1, 2));

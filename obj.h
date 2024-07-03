@@ -12,12 +12,14 @@ typedef enum ObjectType {
   DICT_OBJ,
   FUNC_OBJ,
   BUILTIN_OBJ,
+  METHOD_OBJ,
 } ObjectType;
 
 typedef struct String String;
 typedef struct List List;
 typedef struct Dict Dict;
 typedef struct Func Func;
+typedef struct Method Method;
 typedef struct Object Object;
 typedef Object (*Builtin)(size_t, Object *);
 
@@ -28,7 +30,7 @@ typedef struct ObjectTrait {
 
 extern ObjectTrait
   none_trait, int_trait, float_trait, builtin_trait,
-  str_trait, list_trait, dict_trait, func_trait;
+  str_trait, list_trait, dict_trait, func_trait, method_trait;
 
 void ObjectTrait_init();
 
@@ -41,6 +43,7 @@ typedef struct Object {
     List *l;
     Dict *d;
     Func *fn;
+    Method *m;
     Builtin builtin;
   };
 } Object;
@@ -53,6 +56,7 @@ Object Object_List(List *l);
 Object Object_Dict(Dict *d);
 Object Object_Func(Func *fn);
 Object Object_Builtin(Builtin b);
+Object Object_Method(Method *m);
 
 size_t Object_get_gcval(Object obj);
 void Object_disconnect(size_t gc_base, Object obj);
@@ -122,5 +126,14 @@ typedef struct Func {
 
 Func *Func_new(VMFrame *frame, size_t pc);
 void Func_free(Func *f);
+
+typedef struct Method {
+  size_t gc_base;
+  Object base;
+  Object func;
+} Method;
+
+Method *Method_new(Object base, Object func);
+void Method_free(Method *m);
 
 #endif // OBJ_H

@@ -42,9 +42,9 @@ void VMCode_print(VMCode code) {
   case BUILD_LIST:
     printf("BUILD_LIST %llu\n", code.l);
     break;
-    case BUILD_DICT:
-      printf("BUILD_DICT %llu\n", code.l);
-      break;
+  case BUILD_DICT:
+    printf("BUILD_DICT %llu\n", code.l);
+    break;
   case ADD:
     printf("ADD\n");
     break;
@@ -160,7 +160,7 @@ Object _b_append(size_t nargs, Object *args) {
 
 Object _b_getchar(size_t nargs, Object *args) {
   assert(nargs == 0);
-  return  Object_int(getchar());
+  return Object_int(getchar());
 }
 
 void VMCode_run(VMCode *code) {
@@ -188,8 +188,8 @@ void VMCode_run(VMCode *code) {
     // VMCode_print(code[pc]);
     ByteCode head = code[pc].head;
     switch (head) {
-      case NOOP:
-        break;
+    case NOOP:
+      break;
     case PUSH_I:
       List_append(stack, Object_int(code[pc].i));
       break;
@@ -332,7 +332,13 @@ void VMCode_run(VMCode *code) {
     case CALL:
       {
         // printf("CALL %llu\n", code[pc].l);
-        Object func = stack->items[stack->size - code[pc].l - 1];
+        Object func_base = stack->items[stack->size - code[pc].l - 1];
+        Object func;
+        if (func_base.tp->tp == METHOD_OBJ) {
+          func = func_base.m->func;
+        } else {
+          func = func_base;
+        }
         if (func.tp->tp == FUNC_OBJ) {
           Func *fn = func.fn;
           SeqAppend(VMFrame *, frame_stack, frame);
@@ -340,6 +346,9 @@ void VMCode_run(VMCode *code) {
           GC_active_add(frame->gc_base);
           SeqAppend(size_t, pc_stack, pc);
           stack->size -= code[pc].l;
+          if (func_base.tp->tp == METHOD_OBJ) {
+            List_append(frame->varlist, func_base.m->base);
+          }
           for (size_t i = 0; i < code[pc].l; i++) {
             Object tmp = stack->items[stack->size + i];
             Object_disconnect(stack->gc_base, tmp);
@@ -357,9 +366,10 @@ void VMCode_run(VMCode *code) {
           stack->size--;
           List_append(stack, res);
         } else {
-          printf("Expect a function to be called");
+          printf("Expect a function to be called %d", func.tp->tp);
+          exit(-1);
         }
-        Object_disconnect(stack->gc_base, func);
+        Object_disconnect(stack->gc_base, func_base);
         break;
       }
     case RET:
@@ -383,19 +393,24 @@ void VMCode_run(VMCode *code) {
             printf("Undefined attr '%s'", str_index->val);
             exit(-1);
           }
-          List_append(stack, *r);
+          if (r->tp->tp == FUNC_OBJ) {
+            List_append(stack, Object_Method(Method_new(base, *r)));
+          } else
+            List_append(stack, *r);
+          Object_disconnect(stack->gc_base, base);
         } else if (base.tp->tp == STR_OBJ && index.tp->tp == INT_OBJ) {
           String *str_base = base.s;
           List_append(stack, Object_int(str_base->val[index.i]));
+          Object_disconnect(stack->gc_base, base);
         } else if (base.tp->tp == LIST_OBJ && index.tp->tp == INT_OBJ) {
           List *list_base = base.l;
           List_append(stack, list_base->items[index.i]);
+          Object_disconnect(stack->gc_base, base);
         } else {
           printf("Wrong base or index type");
           exit(-1);
         }
         Object_disconnect(stack->gc_base, index);
-        Object_disconnect(stack->gc_base, base);
         break;
       }
     case SET_NTH:

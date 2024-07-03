@@ -1,9 +1,7 @@
 #include "obj.h"
 
-ObjectTrait
-  none_trait, int_trait, float_trait, builtin_trait,
-  str_trait, list_trait, dict_trait, func_trait;
-
+ObjectTrait none_trait, int_trait, float_trait, builtin_trait, str_trait,
+    list_trait, dict_trait, func_trait, method_trait;
 
 void ObjectTrait_init() {
   none_trait.tp = NONE_OBJ;
@@ -23,12 +21,15 @@ void ObjectTrait_init() {
 
   list_trait.tp = LIST_OBJ;
   list_trait.dstcor = (GC_Dstcor)List_free;
-  
+
   dict_trait.tp = DICT_OBJ;
   dict_trait.dstcor = (GC_Dstcor)Dict_free;
 
   func_trait.tp = FUNC_OBJ;
   func_trait.dstcor = (GC_Dstcor)Func_free;
+
+  method_trait.tp = METHOD_OBJ;
+  method_trait.dstcor = (GC_Dstcor)Method_free;
 }
 
 Object Object_none() {
@@ -86,22 +87,31 @@ Object Object_Builtin(Builtin b) {
   return obj;
 }
 
+Object Object_Method(Method *m) {
+  Object obj;
+  obj.tp = &method_trait;
+  obj.m = m;
+  return obj;
+}
+
 size_t Object_get_gcval(Object obj) {
   // printf("%d\n", obj.tp->tp);
   switch (obj.tp->tp) {
-    case INT_OBJ:
-    case FLOAT_OBJ:
-    case NONE_OBJ:
-    case BUILTIN_OBJ:
-      return 0;
-    case STR_OBJ:
-      return obj.s->gc_base;
-    case LIST_OBJ:
-      return obj.l->gc_base;
-    case DICT_OBJ:
-      return obj.d->gc_base;
-    case FUNC_OBJ:
-      return obj.fn->gc_base;
+  case INT_OBJ:
+  case FLOAT_OBJ:
+  case NONE_OBJ:
+  case BUILTIN_OBJ:
+    return 0;
+  case STR_OBJ:
+    return obj.s->gc_base;
+  case LIST_OBJ:
+    return obj.l->gc_base;
+  case DICT_OBJ:
+    return obj.d->gc_base;
+  case FUNC_OBJ:
+    return obj.fn->gc_base;
+  case METHOD_OBJ:
+    return obj.m->gc_base;
   }
 }
 
@@ -116,75 +126,79 @@ void Object_disconnect(size_t gc_base, Object obj) {
 
 bool Object_to_bool(Object o) {
   switch (o.tp->tp) {
-    case INT_OBJ:
-      return o.i;
-    case FLOAT_OBJ:
-      return o.f;
-    case NONE_OBJ:
-      return false;
-    case BUILTIN_OBJ:
-      return true;
-    case STR_OBJ:
-      return o.s->size;
-    case LIST_OBJ:
-      return o.l->size;
-    case DICT_OBJ:
-      return o.d->size;
-    case FUNC_OBJ:
-      return true;
+  case INT_OBJ:
+    return o.i;
+  case FLOAT_OBJ:
+    return o.f;
+  case NONE_OBJ:
+    return false;
+  case BUILTIN_OBJ:
+    return true;
+  case STR_OBJ:
+    return o.s->size;
+  case LIST_OBJ:
+    return o.l->size;
+  case DICT_OBJ:
+    return o.d->size;
+  case FUNC_OBJ:
+    return true;
+  case METHOD_OBJ:
+    return true;
   }
 }
 
 long long Object_cmp(Object a, Object b) {
   switch (a.tp->tp) {
-    case INT_OBJ:
-      return a.i - b.i;
-    case FLOAT_OBJ:
-      return a.f - b.f;
-    case NONE_OBJ:
-      return 0;
-    case STR_OBJ:
-      return strcmp(a.s->val, b.s->val);
-    default:
-      printf("Unsupported binary operation");
-      exit(-1);
+  case INT_OBJ:
+    return a.i - b.i;
+  case FLOAT_OBJ:
+    return a.f - b.f;
+  case NONE_OBJ:
+    return 0;
+  case STR_OBJ:
+    return strcmp(a.s->val, b.s->val);
+  default:
+    printf("Unsupported binary operation");
+    exit(-1);
   }
 }
 
 void Object_print(Object o) {
   switch (o.tp->tp) {
-    case INT_OBJ:
-      printf("%lld", o.i);
-      break;
-    case FLOAT_OBJ:
-      printf("%lf", o.f);
-      break;
-    case NONE_OBJ:
-      printf("none");
-      break;
-    case STR_OBJ:
-      printf("%s", o.s->val);
-      break;
-    case LIST_OBJ:
-      printf("[");
-      if (o.l->size) {
-        Object_print(o.l->items[0]);
-        for (size_t i = 1; i < o.l->size; i++) {
-          printf(", ");
-          Object_print(o.l->items[i]);
-        }
+  case INT_OBJ:
+    printf("%lld", o.i);
+    break;
+  case FLOAT_OBJ:
+    printf("%lf", o.f);
+    break;
+  case NONE_OBJ:
+    printf("none");
+    break;
+  case STR_OBJ:
+    printf("%s", o.s->val);
+    break;
+  case LIST_OBJ:
+    printf("[");
+    if (o.l->size) {
+      Object_print(o.l->items[0]);
+      for (size_t i = 1; i < o.l->size; i++) {
+        printf(", ");
+        Object_print(o.l->items[i]);
       }
-      printf("]");
-      break;
-    case DICT_OBJ:
-      printf("<Dict>");
-      break;
-    case FUNC_OBJ:
-      printf("<Func>");
-      break;
-    default:
-      printf("Failed to print.");
-      exit(-1);
+    }
+    printf("]");
+    break;
+  case DICT_OBJ:
+    printf("<Dict>");
+    break;
+  case FUNC_OBJ:
+    printf("<Func>");
+    break;
+  case METHOD_OBJ:
+    printf("<Method>");
+  default:
+    printf("Failed to print.");
+    exit(-1);
   }
 }
 
@@ -307,9 +321,7 @@ Dict *Dict_new() {
   return dict;
 }
 
-Object *Dict_find(Dict *dict, char *key) {
-  return _Dict_find(dict->val, key);
-}
+Object *Dict_find(Dict *dict, char *key) { return _Dict_find(dict->val, key); }
 
 void Dict_insert(Dict *dict, char *key, Object obj) {
   dict->size++;
@@ -360,3 +372,17 @@ void Func_free(Func *f) {
   // printf("Func_free %llx\n", f);
   free(f);
 }
+Method *Method_new(Object base, Object func) {
+  Method *m = malloc(sizeof(Method));
+  m->gc_base = GC_objs_add(GC_Object_new(m, (GC_Dstcor)Method_free));
+  m->base = base;
+  m->func = func;
+  size_t base_gcval = Object_get_gcval(base), func_gcval = Object_get_gcval(func);
+  if (base_gcval)
+    GC_obj_add_ch(m->gc_base, base_gcval);
+  if (func_gcval)
+    GC_obj_add_ch(m->gc_base, func_gcval);
+  return m;
+}
+
+void Method_free(Method *m) { free(m); }
