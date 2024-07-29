@@ -1,39 +1,37 @@
-#ifndef GC_H
-#define GC_H
+#include <stdbool.h>
 
-#include "includes.h"
+typedef void (*gc_free_t)(void *);
 
-// free一个对象的时候，只需要把它的主体free掉并将其从active中清除即可，不需要管子对象
-typedef void (*GC_Dstcor)(void *);
+typedef struct gc_ObjNode gc_ObjNode;
 
-typedef struct GC_Object {
+typedef struct gc_Children {
+  struct gc_Children *prev, *next;
+  gc_ObjNode *ch;
+} gc_Children;
+
+gc_Children *gc_Children_new(gc_ObjNode *);
+// 用**是因为它可能为NULL，下同
+void gc_Children_append(gc_Children **, gc_ObjNode *);
+void gc_Children_remove(gc_Children *);
+void gc_Children_free(gc_Children *);
+
+typedef struct gc_ObjNode {
+  gc_ObjNode *prev, *next;
+  gc_Children *chs;
   void *ptr;
-  GC_Dstcor dstcor;
-} GC_Object;
+  gc_free_t freer;
+  bool vis;
+} gc_ObjNode;
 
-GC_Object *GC_Object_new(void *ptr, GC_Dstcor dstcor);
+gc_ObjNode *gc_ObjNode_new(void *, gc_free_t);
+void gc_ObjNode_append(gc_ObjNode **, gc_ObjNode *);
+// 将obj移除，同时将它free掉
+void gc_ObjNode_remove(gc_ObjNode *);
 
-// GC就是一个图
-// 所以我还需要写邻接表
-typedef struct GC_GTable {
-  size_t **G;
-  GC_Object **G_bases;
-  size_t *G_sizes, *G_maxs;
-  // 对象是否为stack中出现的
-  bool *G_isrefed;
-  size_t size, max;
-} GC_GTable;
+void gc_ObjNode_recursive(gc_ObjNode *);
+void gc_ObjNode_collect(gc_ObjNode *);
 
-extern GC_GTable gc;
+extern gc_ObjNode *gc;
 
-// 这么多size_t容易乱
-void GC_init();
-size_t GC_objs_add(GC_Object *obj);
-void GC_active_add(size_t pos);
-void GC_active_remove(size_t ch_pos);
-void GC_obj_add_ch(size_t obj_pos, size_t ch);
-void GC_obj_remove_ch(size_t obj_pos, size_t ch);
-void GC_collect();
-void GC_quit();
-
-#endif
+void gc_init();
+void gc_collect();

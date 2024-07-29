@@ -1,7 +1,7 @@
-objs = gc.c obj.c lex.c compile.c vm.c idict.c
+objs =
 
 run: build
-	./main.exe test.bl
+	./main.exe
 
 build: $(objs)
 	gcc -g $(objs) main.c -o main.exe
