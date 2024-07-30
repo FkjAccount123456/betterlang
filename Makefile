@@ -1,4 +1,4 @@
-objs =
+objs = b_object.o b_stdlib.c gc.c
 
 run: build
 	./main.exe
