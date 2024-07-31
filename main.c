@@ -1,3 +1,4 @@
+#include "b_lex.h"
 #include "b_object.h"
 #include "gc.h"
 #include <stdbool.h>
@@ -17,6 +18,7 @@ int main(int argc, char **argv) {
 void init() {
   gc_init();
   init_traits();
+  init_opstr_table();
 }
 
 void test_dict() {

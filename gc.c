@@ -81,6 +81,7 @@ gc_ObjNode *gc_ObjNode_new(gc_Object *obj) {
   node->obj = obj;
   node->prev = node->next = NULL;
   node->chs = NULL;
+  gc_ObjNode_append(&gc.gcmap, node);
   return node;
 }
 
@@ -88,8 +89,11 @@ void gc_ObjNode_append(gc_ObjNode **base, gc_ObjNode *node) {
   if (!*base) {
     *base = node;
   } else {
-    (*base)->prev->next = node;
-    (*base)->prev = (*base)->prev->next;
+    if ((*base)->prev)
+      (*base)->prev->next = node;
+    node->prev = (*base)->prev;
+    node->next = *base;
+    (*base)->prev = node;
   }
 }
 
