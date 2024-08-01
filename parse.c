@@ -86,6 +86,8 @@ ASTNode *parse_factor(Parser *p) {
       }
     }
     Parser_eat(p, End);
+    node = ASTNode_new(BuildDictExpr);
+    node->listAST = list;
   } else if (p->token->tp == FuncToken) {
     Parser_next(p);
     ASTList lambda = SeqNew(ASTList);

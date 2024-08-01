@@ -73,7 +73,7 @@ String *read_file(char *filename) {
 }
 
 void test_parse() {
-  String *code = read_file("test1.bl");
+  String *code = read_file("test2.bl");
   TokenList *tokens = tokenize(code->v);
   Parser *p = Parser_new(tokens);
   ASTNode *ast = parse_program(p);
