@@ -1,0 +1,6 @@
+func function12345() {
+    "\"abc\"";
+    return "Hello, world!";
+}
+
+function12345();

@@ -1,0 +1,22 @@
+var obj = {
+    a: 10,
+    b: 20,
+    print: func(self) {
+        println("a: ", self["a"], ", b: ", self["b"]);
+        return none;
+    },
+    setA: func(self, a) {
+        self["a"] = a;
+        return none;
+    },
+};
+
+obj.print();
+obj.setA(30);
+obj.print();
+
+var adder = {
+    add: func(self, a, b) { return a + b; },
+};
+
+println(adder.add(1, 2));

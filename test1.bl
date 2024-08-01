@@ -1,0 +1,69 @@
+2*2+2;
+2*(2+2);
+
+func fac(num) {
+    if num == 0 { return 1; }
+    else        { return fac(num - 1) * num; }
+}
+
+var a = 10;
+println(fac(a));
+
+var i = 0;
+while 1 {
+    i = i + 1;
+    if i == 5  { continue; }
+    if i == 10 { break; }
+    println(i);
+}
+
+var l = [1, 2, [2, 4, 5]];
+println(l, " ", l[2], " ", l[2][0]);
+l[2][0] = 3;
+println(l, " ", l[2], " ", l[2][0]);
+println("len(l): ", len(l));
+
+var l1 = [], j = 0;
+while j < 10 {
+    j = j + 1;
+    append(l1, j);
+    println(l1, " ", j);
+}
+
+func readln(msg, str) {
+    print(msg);
+    var ch = getchar();
+    while ch != 10 {
+        append(str, ch);
+        ch = getchar();
+    }
+    return none;
+}
+
+var s = "";
+readln("Please input something: ", s);
+println("Your message: ", s);
+
+func Counter(start) {
+    func next() {
+        start = start + 1;
+        return start;
+    }
+    return next;
+}
+
+var counter = Counter(0);
+var x = counter();
+while x < 10 {
+    println(x);
+    x = counter();
+}
+
+var fn1 = func(a) { return a + 1; };
+println(fn1(1));
+
+println(0.2 + 0.1);
+
+if 0      { println(0); }
+else if 1 { println(1); }
+else      { println(2); }

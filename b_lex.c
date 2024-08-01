@@ -103,11 +103,6 @@ void TokenList_add(TokenList *tl, Token t) {
 }
 
 void TokenList_free(TokenList *tl) {
-  for (size_t i = 0; i < tl->len; i++) {
-    if (tl->tokens[i].tp == StringToken || tl->tokens[i].tp == IdToken) {
-      String_free(tl->tokens[i].strToken);
-    }
-  }
   b_free(tl->tokens);
   b_free(tl);
 }
@@ -156,7 +151,19 @@ TokenList *tokenize(char *code) {
       while (*cur && (isalnum(*cur) || *cur == '_')) {
         String_append(id, *cur++);
       }
-      TokenList_add(res, Token_id(id));
+#define Match(kw, tp)                                                          \
+  if (!strcmp(id->v, kw))                                                      \
+  TokenList_add(res, Token_new(tp))
+      Match("if", IfToken);
+      else Match("else", ElseToken);
+      else Match("while", WhileToken);
+      else Match("var", VarToken);
+      else Match("func", FuncToken);
+      else Match("return", ReturnToken);
+      else Match("break", BreakToken);
+      else Match("continue", ContinueToken);
+      else TokenList_add(res, Token_id(id));
+#undef Match
     } else if (*cur == '\'' || *cur == '\"') {
       char x = *cur++;
       String *str = String_new("");
@@ -236,10 +243,12 @@ TokenList *tokenize(char *code) {
       }
       cur++;
       TokenList_add(res, Token_string(str));
-    } else if (cur[1] && cur[2] && cur[0] == '<' && cur[1] == '<' && cur[2] == '=') {
+    } else if (cur[1] && cur[2] && cur[0] == '<' && cur[1] == '<' &&
+               cur[2] == '=') {
       TokenList_add(res, Token_new(LshEqToken));
       cur += 3;
-    } else if (cur[1] && cur[2] && cur[0] == '>' && cur[1] == '>' && cur[2] == '=') {
+    } else if (cur[1] && cur[2] && cur[0] == '>' && cur[1] == '>' &&
+               cur[2] == '=') {
       TokenList_add(res, Token_new(RshEqToken));
       cur += 3;
     } else if (cur[1] && opstr_table[cur[0] * 128 + cur[1]]) {
