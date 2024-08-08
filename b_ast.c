@@ -43,7 +43,8 @@ void ASTNode_free(ASTNode *node) {
     break;
   case StringExpr:
   case VarExpr:
-    String_free(node->stringAST);
+    // String_free(node->stringAST);
+    gc_Children_remove(gc.gcmap->chs, node->stringAST->gcobj);
     break;
   case ExprStmt:
   case ReturnStmt:

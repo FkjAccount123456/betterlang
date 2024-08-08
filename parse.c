@@ -9,7 +9,6 @@ char op_prio[2048] = {
     [SubToken] = 99,  [LshToken] = 98,    [RshToken] = 98,  [EqToken] = 97,
     [NeToken] = 97,   [GtToken] = 96,     [GeToken] = 96,   [LtToken] = 96,
     [LeToken] = 96,   [BitAndToken] = 95, [XorToken] = 94,  [BitOrToken] = 93,
-    [AndToken] = 92,  [OrToken] = 91,
 };
 
 Parser *Parser_new(TokenList *tokens) {
@@ -147,7 +146,7 @@ ASTNode *parse_factor(Parser *p) {
   return node;
 }
 
-ASTNode *parse_expr(Parser *p) {
+ASTNode *_parse_expr(Parser *p) {
   ASTList expr = SeqNew(ASTList);
   SeqAppend(expr, parse_factor(p));
   typedef struct Seq(TokenType) OpStack;
@@ -172,6 +171,36 @@ ASTNode *parse_expr(Parser *p) {
   ASTNode *res = ASTNode_new(ExprExpr);
   res->listAST = expr;
   return res;
+}
+
+ASTNode *parse_and(Parser *p) {
+  ASTList res = SeqNew(ASTList);
+  SeqAppend(res, _parse_expr(p));
+  while (p->token->tp == AndToken) {
+    Parser_next(p);
+    SeqAppend(res, _parse_expr(p));
+  }
+  if (res.len == 1) {
+    ASTNode *node = res.v[0];
+    SeqFree(res);
+    return node;
+  }
+  return ASTNode_init(AndExpr, listAST, res);
+}
+
+ASTNode *parse_expr(Parser *p) {
+  ASTList res = SeqNew(ASTList);
+  SeqAppend(res, parse_and(p));
+  while (p->token->tp == OrToken) {
+    Parser_next(p);
+    SeqAppend(res, parse_and(p));
+  }
+  if (res.len == 1) {
+    ASTNode *node = res.v[0];
+    SeqFree(res);
+    return node;
+  }
+  return ASTNode_init(OrExpr, listAST, res);
 }
 
 ASTNode *parse_stmt(Parser *p) {

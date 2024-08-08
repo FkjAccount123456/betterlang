@@ -1,6 +1,19 @@
+/*
+Hello, world!
+*/
+
 func function12345() {
-    "\"abc\"";
     return "Hello, world!";
 }
 
-function12345();
+// println(function12345());
+
+func fac(num) {
+    if num == 0 {
+        return 1;
+    } else {
+        return num * fac(num - 1);
+    }
+}
+
+println(fac(10));

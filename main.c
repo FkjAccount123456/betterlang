@@ -2,6 +2,7 @@
 #include "b_object.h"
 #include "gc.h"
 #include "parse.h"
+#include "compile.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,12 +11,14 @@ void init();
 void test_dict();
 void test_list();
 void test_parse();
+void test_run();
 
 int main(int argc, char **argv) {
   init();
   // test_dict();
   // test_list();
-  test_parse();
+  // test_parse();
+  test_run();
   return 0;
 }
 
@@ -81,4 +84,30 @@ void test_parse() {
   Parser_free(p);
   ASTNode_free(ast);
   String_free(code);
+}
+
+void test_run() {
+  String *code = read_file("test2.bl");
+  gc_Children_append(gc.gcmap->chs, code->gcobj);
+  TokenList *tokens = tokenize(code->v);
+  Parser *p = Parser_new(tokens);
+  ASTNode *ast = parse_program(p);
+  // ASTNode_print(ast, 0);
+  // puts("");
+  Compiler *c = Compiler_new();
+  size_t reserve = compile_program(c, ast);
+  // for (size_t i = 0; i < c->code.len; i++) {
+  //   printf("%llu\t", i);
+  //   ByteCode_print(c->code.v[i]);
+  //   puts("");
+  // }
+  // puts("");
+  run(c->code, reserve);
+  Compiler_free(c);
+  Parser_free(p);
+  ASTNode_free(ast);
+  // String_free(code);
+  // puts("");
+  gc_Children_remove(gc.gcmap->chs, code->gcobj);
+  gc_collect();
 }

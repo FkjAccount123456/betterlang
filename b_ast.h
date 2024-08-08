@@ -29,6 +29,8 @@ typedef enum ASTType {
   NoneExpr,   // -null
   VarExpr,    // -string
   ExprExpr,   // -list
+  AndExpr,    // 需短路处理
+  OrExpr,
   UnaryExpr,
   TernaryExpr,
   BuildListExpr,

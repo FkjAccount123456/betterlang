@@ -1,4 +1,8 @@
 *.o
 *.exe
 chat.txt
+_.txt
 PLPG/
+RLPG/
+*~
+tags

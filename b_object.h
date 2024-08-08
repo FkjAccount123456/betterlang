@@ -1,13 +1,16 @@
 #pragma once
 
-#include <stddef.h>
 #include "gc.h"
+#include <stddef.h>
+
+typedef struct Object Object;
 
 typedef struct String String;
 typedef struct List List;
 typedef struct Dict Dict;
-
-typedef struct Object Object;
+typedef struct Func Func;
+typedef struct Method Method;
+typedef Object (*Builtin)(size_t, Object *);
 
 typedef gc_ObjNode *(*gc_obj_get_t)(Object *);
 typedef void (*obj_print_t)(Object *, bool);
@@ -19,6 +22,9 @@ typedef enum ObjType {
   StringObj,
   ListObj,
   DictObj,
+  FuncObj,
+  BuiltinObj,
+  MethodObj,
 } ObjType;
 
 typedef struct ObjTrait {
@@ -28,8 +34,8 @@ typedef struct ObjTrait {
   obj_print_t printer;
 } ObjTrait;
 
-extern ObjTrait none_trait, int_trait, float_trait,
-                string_trait, list_trait, dict_trait;
+extern ObjTrait none_trait, int_trait, float_trait, string_trait, list_trait,
+    dict_trait, func_trait, builtin_trait, method_trait;
 
 void init_traits();
 
@@ -41,6 +47,9 @@ typedef struct Object {
     String *stringVal;
     List *listVal;
     Dict *dictVal;
+    Func *funcVal;
+    Builtin builtinVal;
+    Method *methodVal;
   };
 } Object;
 
@@ -50,10 +59,15 @@ Object Object_float(double);
 Object Object_string(String *);
 Object Object_list(List *);
 Object Object_dict(Dict *);
+Object Object_func(Func *);
+Object Object_builtin(Builtin);
+Object Object_method(Method *);
 void Object_print(Object *, bool);
 
 // 字符串复制构造，不在gc体系之内
+// 2024-8-8 算了，还是放进GC里比较妥当
 typedef struct String {
+  gc_ObjNode *gcobj;
   char *v;
   size_t len, max;
 } String;
@@ -63,6 +77,7 @@ String *String_copy(String *);
 void String_append(String *, char);
 void String_cat(String *, String *);
 void String_free(String *);
+gc_ObjNode *String_get(Object *);
 
 char *str_copy(char *);
 size_t str_hash(char *);
@@ -102,3 +117,32 @@ Object *Dict_find(Dict *, char *);
 void Dict_set(Dict *, char *, Object);
 void Dict_free(Dict *);
 gc_ObjNode *Dict_get(Object *);
+
+typedef struct Scope {
+  gc_ObjNode *gcobj;
+  List *varlist;
+  struct Scope *parent;
+} Scope;
+
+Scope *Scope_new(Scope *);
+void Scope_free(Scope *);
+
+typedef struct Func {
+  gc_ObjNode *gcobj;
+  size_t pc;
+  size_t reserve;
+  Scope *closure;
+} Func;
+
+Func *Func_new(size_t, size_t, Scope *);
+gc_ObjNode *Func_get(Object *);
+void Func_free(Func *);
+
+typedef struct Method {
+  gc_ObjNode *gcobj;
+  Object obj, func;
+} Method;
+
+Method *Method_new(Object, Object);
+gc_ObjNode *Method_get(Object *);
+void Method_free(Method *);

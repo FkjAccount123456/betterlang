@@ -145,15 +145,15 @@ TokenList *tokenize(char *code) {
       } else {
         TokenList_add(res, Token_int(atoll(num->v)));
       }
-      String_free(num);
     } else if (isalpha(*cur) || *cur == '_') {
       String *id = String_new("");
+      gc_Children_append(gc.gcmap->chs, id->gcobj);
       while (*cur && (isalnum(*cur) || *cur == '_')) {
         String_append(id, *cur++);
       }
 #define Match(kw, tp)                                                          \
   if (!strcmp(id->v, kw))                                                      \
-  TokenList_add(res, Token_new(tp))
+  TokenList_add(res, Token_new(tp)), gc_Children_remove(gc.gcmap->chs, id->gcobj)
       Match("if", IfToken);
       else Match("else", ElseToken);
       else Match("while", WhileToken);
@@ -167,6 +167,7 @@ TokenList *tokenize(char *code) {
     } else if (*cur == '\'' || *cur == '\"') {
       char x = *cur++;
       String *str = String_new("");
+      gc_Children_append(gc.gcmap->chs, str->gcobj);
       while (*cur && *cur != x) {
         if (*cur == '\\') {
           cur++;

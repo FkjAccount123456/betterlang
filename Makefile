@@ -1,4 +1,4 @@
-objs = b_object.o b_stdlib.o gc.o b_lex.o b_ast.o compile.o parse.o
+objs = b_object.c b_stdlib.c gc.c b_lex.c b_ast.c compile.c parse.c vm.c builtins.c
 
 run: build
 	./main.exe

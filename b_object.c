@@ -1,25 +1,19 @@
 #include "b_object.h"
 #include "b_stdlib.h"
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-ObjTrait none_trait, int_trait, float_trait,
-         string_trait, list_trait, dict_trait;
+ObjTrait none_trait, int_trait, float_trait, string_trait, list_trait,
+    dict_trait, func_trait, builtin_trait, method_trait;
 
-void _none_print(Object *obj, bool istop) {
-  printf("none");
-}
+void _none_print(Object *obj, bool istop) { printf("none"); }
 
-void _int_print(Object *obj, bool istop) {
-  printf("%lld", obj->intVal);
-}
+void _int_print(Object *obj, bool istop) { printf("%lld", obj->intVal); }
 
-void _float_print(Object *obj, bool istop) {
-  printf("%lf", obj->floatVal);
-}
+void _float_print(Object *obj, bool istop) { printf("%lf", obj->floatVal); }
 
 void _string_print(Object *obj, bool istop) {
   if (istop) {
@@ -30,17 +24,17 @@ void _string_print(Object *obj, bool istop) {
       char ch = obj->stringVal->v[i];
       if (ch == '\r') {
         printf("\\r");
-      } else if (ch == 't') {
-        printf("\\t");
-      } else if (ch == 'a') {
+      } else if (ch == '\t') {
+        printf("t");
+      } else if (ch == '\a') {
         printf("\\a");
-      } else if (ch == 'f') {
+      } else if (ch == '\f') {
         printf("\\f");
-      } else if (ch == 'v') {
+      } else if (ch == '\v') {
         printf("\\v");
-      } else if (ch == 'b') {
+      } else if (ch == '\b') {
         printf("\\b");
-      } else if (ch == 'n') {
+      } else if (ch == '\n') {
         printf("\\n");
       } else if (ch == '\\') {
         printf("\\\\");
@@ -91,6 +85,12 @@ void _dict_print(Object *obj, bool istop) {
   printf("}");
 }
 
+void _func_print(Object *func, bool istop) { printf("<Func>"); }
+
+void _builtin_print(Object *obj, bool istop) { printf("<Builtin>"); }
+
+void _method_print(Object *obj, bool istop) { printf("<Method>"); }
+
 void init_traits() {
   none_trait.tp = NoneObj;
   none_trait.freer = NULL;
@@ -109,7 +109,7 @@ void init_traits() {
 
   string_trait.tp = StringObj;
   string_trait.freer = (gc_free_t)String_free;
-  string_trait.getter = NULL;
+  string_trait.getter = (gc_obj_get_t)String_get;
   string_trait.printer = _string_print;
 
   list_trait.tp = ListObj;
@@ -121,6 +121,21 @@ void init_traits() {
   dict_trait.freer = (gc_free_t)Dict_free;
   dict_trait.getter = (gc_obj_get_t)Dict_get;
   dict_trait.printer = (obj_print_t)_dict_print;
+
+  func_trait.tp = FuncObj;
+  func_trait.freer = (gc_free_t)Func_free;
+  func_trait.getter = (gc_obj_get_t)Func_get;
+  func_trait.printer = (obj_print_t)_func_print;
+
+  builtin_trait.tp = BuiltinObj;
+  builtin_trait.freer = NULL;
+  builtin_trait.getter = NULL;
+  builtin_trait.printer = (obj_print_t)_builtin_print;
+
+  method_trait.tp = MethodObj;
+  method_trait.freer = (gc_free_t)Method_free;
+  method_trait.getter = (gc_obj_get_t)Method_get;
+  method_trait.printer = (obj_print_t)_method_print;
 }
 
 Object Object_none() {
@@ -164,12 +179,32 @@ Object Object_dict(Dict *dictVal) {
   return obj;
 }
 
-void Object_print(Object *obj, bool istop) {
-  obj->tp->printer(obj, istop);
+Object Object_func(Func *funcVal) {
+  Object obj;
+  obj.tp = &func_trait;
+  obj.funcVal = funcVal;
+  return obj;
 }
+
+Object Object_builtin(Builtin builtinVal) {
+  Object obj;
+  obj.tp = &builtin_trait;
+  obj.builtinVal = builtinVal;
+  return obj;
+}
+
+Object Object_method(Method *methodVal) {
+  Object obj;
+  obj.tp = &method_trait;
+  obj.methodVal = methodVal;
+  return obj;
+}
+
+void Object_print(Object *obj, bool istop) { obj->tp->printer(obj, istop); }
 
 String *String_new(char *base) {
   String *str = b_malloc(sizeof(String));
+  str->gcobj = gc_ObjNode_new(gc_Object_new(str, (gc_free_t)String_free));
   str->len = strlen(base);
   str->max = 8;
   while (str->max < str->len)
@@ -179,9 +214,7 @@ String *String_new(char *base) {
   return str;
 }
 
-String *String_copy(String *str) {
-  return String_new(str->v);
-}
+String *String_copy(String *str) { return String_new(str->v); }
 
 void String_append(String *str, char ch) {
   if (str->len == str->max) {
@@ -207,6 +240,8 @@ void String_free(String *str) {
   b_free(str->v);
   b_free(str);
 }
+
+gc_ObjNode *String_get(Object *obj) { return obj->stringVal->gcobj; }
 
 char *str_copy(char *base) {
   char *str = b_malloc(sizeof(char) * (strlen(base) + 1));
@@ -239,7 +274,7 @@ void List_append(List *list, Object obj) {
   }
   list->v[list->len++] = obj;
   if (obj.tp->getter)
-    gc_Children_append(&list->gcobj->chs, obj.tp->getter(&obj));
+    gc_Children_append(list->gcobj->chs, obj.tp->getter(&obj));
 }
 
 void List_free(List *list) {
@@ -287,7 +322,7 @@ Dict *Dict_new() {
 
 void Dict_insert(Dict *dict, char *key, Object val) {
   if (val.tp->getter)
-    gc_Children_append(&dict->gcobj->chs, val.tp->getter(&val));
+    gc_Children_append(dict->gcobj->chs, val.tp->getter(&val));
   size_t hash = str_hash(key) % DICT_ENTRIES;
   DictEntry_append(&dict->entries[hash], key, val);
 }
@@ -307,7 +342,7 @@ void Dict_set(Dict *dict, char *key, Object val) {
   if (obj->tp->getter)
     gc_Children_remove(dict->gcobj->chs, obj->tp->getter(obj));
   if (val.tp->getter)
-    gc_Children_append(&dict->gcobj->chs, val.tp->getter(&val));
+    gc_Children_append(dict->gcobj->chs, val.tp->getter(&val));
   *obj = val;
 }
 
@@ -328,6 +363,47 @@ void Dict_free(Dict *dict) {
   b_free(dict->entries);
 }
 
-gc_ObjNode *Dict_get(Object *dict) {
-  return dict->dictVal->gcobj;
+gc_ObjNode *Dict_get(Object *dict) { return dict->dictVal->gcobj; }
+
+Scope *Scope_new(Scope *parent) {
+  Scope *scope = b_malloc(sizeof(Scope));
+  scope->gcobj = gc_ObjNode_new(gc_Object_new(scope, (gc_free_t)Scope_free));
+  if (parent)
+    gc_Children_append(scope->gcobj->chs, parent->gcobj);
+  scope->parent = parent;
+  return scope;
 }
+
+// 没错就这么简单
+void Scope_free(Scope *scope) { b_free(scope); }
+
+Func *Func_new(size_t pc, size_t reserve, Scope *closure) {
+  Func *func = b_malloc(sizeof(Func));
+  func->gcobj = gc_ObjNode_new(gc_Object_new(func, (gc_free_t)Func_free));
+  if (closure)
+    gc_Children_append(func->gcobj->chs, closure->gcobj);
+  func->pc = pc;
+  func->reserve = reserve;
+  func->closure = closure;
+  return func;
+}
+
+gc_ObjNode *Func_get(Object *func) { return func->funcVal->gcobj; }
+
+void Func_free(Func *func) { b_free(func); }
+
+Method *Method_new(Object obj, Object func) {
+  Method *m = b_malloc(sizeof(Method));
+  m->gcobj = gc_ObjNode_new(gc_Object_new(m, (gc_free_t)Method_free));
+  if (obj.tp->getter)
+    gc_Children_append(m->gcobj->chs, obj.tp->getter(&obj));
+  if (func.tp->getter)
+    gc_Children_append(m->gcobj->chs, func.tp->getter(&func));
+  m->obj = obj;
+  m->func = func;
+  return m;
+}
+
+gc_ObjNode *Method_get(Object *m) { return m->methodVal->gcobj; }
+
+void Method_free(Method *m) { b_free(m); }
