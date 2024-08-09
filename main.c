@@ -3,6 +3,7 @@
 #include "gc.h"
 #include "parse.h"
 #include "compile.h"
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,14 +12,15 @@ void init();
 void test_dict();
 void test_list();
 void test_parse();
-void test_run();
+void test_run(char *file);
 
 int main(int argc, char **argv) {
+  assert(argc == 2);
   init();
   // test_dict();
   // test_list();
   // test_parse();
-  test_run();
+  test_run(argv[1]);
   return 0;
 }
 
@@ -86,8 +88,8 @@ void test_parse() {
   String_free(code);
 }
 
-void test_run() {
-  String *code = read_file("test2.bl");
+void test_run(char *file) {
+  String *code = read_file(file);
   gc_Children_append(gc.gcmap->chs, code->gcobj);
   TokenList *tokens = tokenize(code->v);
   Parser *p = Parser_new(tokens);

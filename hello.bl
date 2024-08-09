@@ -1,0 +1,7 @@
+func hello(name) {
+    println("Hello, ", name, "!");
+    return none;
+}
+
+hello("world");
+hello("betterlang");
