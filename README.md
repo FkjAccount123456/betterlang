@@ -1,5 +1,5 @@
 # betterlang v2
-[README.md](README.md) | README-en.md
+README.md | [README-en.md](README-en.md)
 ## 简介
 betterlang是一个用C编写的、编译到字节码的动态语言  
 具有自己的GC（标记-清除）  

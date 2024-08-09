@@ -1,5 +1,5 @@
 # betterlang v2
-README.md | [README-en.md](README-en.md)
+[README.md](README.md) | README-en.md
 ## Brief Introduction
 betterlang is a dynamic programming language written by C, compiled to bytecode.  
 It has its own GC (Mark-Sweep), and the syntax looks like JavaScript.     
