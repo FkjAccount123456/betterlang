@@ -282,7 +282,7 @@ void compile(Compiler *c, ASTNode *node) {
         SeqAppend(c->code, ByteCode_new(Pop));
       }
       compile(c, node->listAST.v[i]);
-      SeqAppend(jnz_list, node->listAST.len);
+      SeqAppend(jnz_list, c->code.len);
       SeqAppend(c->code, ByteCode_new(JnzNoPop));
     }
     for (size_t i = 0; i < jnz_list.len; i++) {
@@ -298,7 +298,7 @@ void compile(Compiler *c, ASTNode *node) {
         SeqAppend(c->code, ByteCode_new(Pop));
       }
       compile(c, node->listAST.v[i]);
-      SeqAppend(jnz_list, node->listAST.len);
+      SeqAppend(jnz_list, c->code.len);
       SeqAppend(c->code, ByteCode_new(JzNoPop));
     }
     for (size_t i = 0; i < jnz_list.len; i++) {

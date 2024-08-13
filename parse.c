@@ -151,7 +151,7 @@ ASTNode *_parse_expr(Parser *p) {
   SeqAppend(expr, parse_factor(p));
   typedef struct Seq(TokenType) OpStack;
   OpStack stack = SeqNew(OpStack);
-  while (p->token->tp >= AddToken && p->token->tp <= OrToken) {
+  while (p->token->tp >= AddToken && p->token->tp <= XorToken) {
     TokenType op = Parser_next(p)->tp;
     while (stack.len && op_prio[stack.v[stack.len - 1]] >= op_prio[op]) {
       SeqAppend(expr, ASTNode_init(OpTerminal, opAST, SeqPop(stack)));

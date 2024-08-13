@@ -68,6 +68,7 @@ long long _int_binary(TokenType op, long long l, long long r) {
   case XorToken:
     return l ^ r;
   default:
+    printf("%d\n", op);
     printf("Unknown operator at binary operation");
     exit(-1);
   }
@@ -453,12 +454,12 @@ void run(ByteCodeList bytecodelist, size_t reserve) {
       break;
     }
     case JzNoPop: {
-      if (_object_tobool(stack->v[--stack->len]))
+      if (_object_tobool(stack->v[stack->len - 1]))
         pc = code.l;
       break;
     }
     case JnzNoPop: {
-      if (!_object_tobool(stack->v[--stack->len]))
+      if (!_object_tobool(stack->v[stack->len - 1]))
         pc = code.l;
       break;
     }
